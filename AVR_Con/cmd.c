@@ -139,11 +139,10 @@ int8_t parseValue(char* value, uint16_t* out){
 	}
 	// DECIMAL
 	else{
-		int tmp = 0;
+		status = CONV_D;
 		while(value[i] != '\0'){
-			tmp = AsciiToValue(value[i]);
-			if(tmp>=0)
-				val = val*10 + tmp;
+			if(value[i] >= 0x30 && value[i] <= 0x37)
+				val = val*10 + AsciiToValue(value[i]);
 			else{
 				val = 0;
 				status = ERROR;
@@ -151,7 +150,7 @@ int8_t parseValue(char* value, uint16_t* out){
 			}
 			i++;
 		}
-		status = CONV_D;
+
 	}
 
 	*out = val;
@@ -182,13 +181,38 @@ int8_t stringCompare(char* a, char* b){
 int8_t executeSet(char* par, uint16_t val){
 	toUpper(par);
 	usart_write(CRLF"%s"CRLF,par);
-	if((par[0] == 'P')){
+	if((par[0] == 'P') && (stringLength(par) == 2)){
 		switch(par[1]){
-		case 'A':break;
-		case 'B':break;
-		case 'C':break;
-		case 'D':break;
+		case 'A': PORTA = val; return 1; break;
+		case 'B': PORTB = val; return 1; break;
+		case 'C': PORTC = val; return 1; break;
+		case 'D': 	val &= 0xFC; // protect USART
+					PORTD = val; return 1; break;
+		default: return 0; break;
 		}
+	}
+	else if((par[0] == 'P') && (stringLength(par) == 3)){
+		par[2] -= 0x30;
+		if((par[2] >= 0) && (par[2] <= 7)){
+			switch(par[1]){
+				case 'A': (val)?(PORTA |= (1 << (par[2]))):(PORTA &= ~(1 << (par[2]))); return 1; break;
+				case 'B': (val)?(PORTB |= (1 << (par[2]))):(PORTB &= ~(1 << (par[2]))); return 1; break;
+				case 'C': (val)?(PORTC |= (1 << (par[2]))):(PORTC &= ~(1 << (par[2]))); return 1; break;
+				case 'D':
+					if(par[2]<2){ //protect USART
+						(val)?(PORTD |= (1 << (par[2]))):(PORTD &= ~(1 << (par[2])));
+						return 1;
+					}
+					else
+						return 0;
+					break;
+				default: return 0; break;
+			}
+		}
+		else{
+			return 0;
+		}
+
 	}
 
 	return 1;

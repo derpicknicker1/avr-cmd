@@ -11,7 +11,14 @@
 
 
 int main(void){
-
+	DDRA=0xFF;
+	DDRB=0xFF;
+	DDRC=0xFF;
+	DDRD=0xFF;
+	PORTA=0x00;
+	PORTB=0x00;
+	PORTC=0x00;
+	PORTD=0x00;
 	usart_init(9600);
 	sei();
 

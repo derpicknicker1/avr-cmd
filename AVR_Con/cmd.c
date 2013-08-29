@@ -46,36 +46,21 @@ int8_t AsciiToValue(char word){
 	return -1;
 }
 
-void toUpper(char* in, char* out){
-	uint8_t i = 0;
-	while(in[i] != '\0'){
-		if(in[i] >=0x61 && in[i] <=0x7a){
-			*out++ = in[i] - 32;
-		}
-		else{
-			*out++ = in[i];
-		}
-		i++;
-	}
-	*out++ = '\0';
+void toUpper(char* in){
+	do{
+		if(*in >=0x61 && *in <=0x7a)
+			*in -= 32;
+	}while(*in++);
 }
 
-void toLower(char* in, char* out){
-	uint8_t i = 0;
-	while(in[i] != '\0'){
-		usart_write(CRLF"%c"CRLF,in[i]);
-		if(in[i] >=0x41 && in[i] <=0x5a){
-			*out++ = in[i] + 32;
-		}
-		else{
-			*out++ = in[i];
-		}
-		i++;
-	}
-	*out++ = '\0';
+void toLower(char* in){
+	do{
+		if(*in >=0x41 && *in <=0x5a)
+			*in += 32;
+	}while(*in++);
 }
 
-int8_t parseValue(char* value,uint8_t size, uint16_t* out){
+int8_t parseValue(char* value, uint16_t* out){
 
 	uint16_t val = 0;
 	uint8_t i = 0;
@@ -194,6 +179,20 @@ int8_t stringCompare(char* a, char* b){
 	return 0;
 }
 
+int8_t executeSet(char* par, uint16_t val){
+	toUpper(par);
+	usart_write(CRLF"%s"CRLF,par);
+	if((par[0] == 'P')){
+		switch(par[1]){
+		case 'A':break;
+		case 'B':break;
+		case 'C':break;
+		case 'D':break;
+		}
+	}
+
+	return 1;
+}
 
 void parseLine(char* line){
 
@@ -209,8 +208,9 @@ void parseLine(char* line){
 		get_group_from_line(2,line,value);
 		if(stringLength(parameter)>0){
 			uint16_t parsedValue = 0;
-			int8_t status = parseValue(value, stringLength(value),&parsedValue);
+			int8_t status = parseValue(value,&parsedValue);
 //			TODO: DO SET STUFF HERE.
+			executeSet(parameter,parsedValue);
 			usart_write(CRLF"%i: %s = %i"CRLF,status,parameter,parsedValue);
 		}
 	}

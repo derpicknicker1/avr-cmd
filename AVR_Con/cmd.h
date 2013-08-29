@@ -26,11 +26,12 @@
 	void get_group_from_line(uint8_t position, char* line, char* output);
 	int16_t HexWordToValue(char word);
 	int8_t AsciiToValue(char word);
-	void toUpper(char* in, char* out);
-	void toLower(char* in, char* out);
-	int8_t parseValue(char* value,uint8_t size, uint16_t* out);
+	void toUpper(char* in);
+	void toLower(char* in);
+	int8_t parseValue(char* value, uint16_t* out);
 	uint8_t stringLength(char* a);
 	int8_t stringCompare(char* a, char* b);
 	void parseLine(char* line);
+	int8_t executeSet(char* par, uint16_t val);
 
 #endif /* CMD_H_ */

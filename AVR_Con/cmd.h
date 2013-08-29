@@ -21,6 +21,7 @@
 	#define CONV_O 		3	// 	 3 = octal
 	#define CONV_SW 	4	//	 4 = on/off
 	#define CMD_SET 	"set"
+	#define CMD_CFG 	"cfg"
 	#define CMD_GET 	"get"
 
 	void get_group_from_line(uint8_t position, char* line, char* output);
@@ -33,5 +34,7 @@
 	int8_t stringCompare(char* a, char* b);
 	void parseLine(char* line);
 	int8_t executeSet(char* par, uint16_t val);
+	int16_t executeGet(char* par, char* val);
+	int8_t executeCfg(char* par, uint16_t val);
 
 #endif /* CMD_H_ */

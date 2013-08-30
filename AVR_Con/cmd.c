@@ -8,6 +8,13 @@
 #include "usart.h"
 #include "cmd.h"
 
+#if USE_SD == 1
+	#include "sd/mmc_config.h"	// Hier werden alle noetigen Konfigurationen vorgenommen, umbedingt anschauen !
+	#include "sd/file.h"
+	#include "sd/fat.h"
+	#include "sd/mmc.h"
+#endif
+
 void get_group_from_line(uint8_t position, char* line, char* output){
 	uint8_t spaces = 0;
 	uint8_t i = 0;
@@ -202,7 +209,7 @@ int8_t executeSet(char* par, uint16_t val){
 				case 'B': (val)?(PORTB |= (1 << (par[2] - 0x30))):(PORTB &= ~(1 << (par[2] - 0x30))); return 1; break;
 				case 'C': (val)?(PORTC |= (1 << (par[2] - 0x30))):(PORTC &= ~(1 << (par[2] - 0x30))); return 1; break;
 				case 'D':
-					if(par[2] > 1){ //protect USART
+					if((par[2] - 0x30) > 1){ //protect USART
 						(val)?(PORTD |= (1 << (par[2] - 0x30))):(PORTD &= ~(1 << (par[2] - 0x30)));
 						return 1;
 					}
@@ -239,7 +246,7 @@ int8_t executeCfg(char* par, uint16_t val){
 				case 'B': (val)?(DDRB |= (1 << (par[2] - 0x30))):(DDRB &= ~(1 << (par[2] - 0x30))); return 1; break;
 				case 'C': (val)?(DDRC |= (1 << (par[2] - 0x30))):(DDRC &= ~(1 << (par[2] - 0x30))); return 1; break;
 				case 'D':
-					if(par[2] > 1){ //protect USART
+					if((par[2] - 0x30) > 1){ //protect USART
 						(val)?(DDRD |= (1 << (par[2]))):(DDRD &= ~(1 << (par[2])));
 						return 1;
 					}
@@ -253,7 +260,7 @@ int8_t executeCfg(char* par, uint16_t val){
 			return 0;
 	}
 
-	return 1;
+	return 0;
 }
 
 int16_t executeGet(char* par, char* val){
@@ -265,7 +272,7 @@ int16_t executeGet(char* par, char* val){
 			case 'B': return DDRB; break;
 			case 'C': return DDRC; break;
 			case 'D': return (DDRD & 0xFC); break;
-			default: return -1; break;
+			default: return ERROR; break;
 			}
 		}
 		else if((val[0] == 'P') && (stringLength(par) == 3)){
@@ -275,18 +282,18 @@ int16_t executeGet(char* par, char* val){
 					case 'B': return ((DDRB >> (par[2] - 0x30)) & 0x01); break;
 					case 'C': return ((DDRB >> (par[2] - 0x30)) & 0x01); break;
 					case 'D':
-						if(par[2] > 1) //protect USART
+						if((par[2] - 0x30) > 1) //protect USART
 							return ((DDRD >> (par[2] - 0x30)) & 0x01);
 						else
-							return -1;
+							return ERROR;
 						break;
-					default: return -1; break;
+					default: return ERROR; break;
 				}
 			}
 			else
-				return -1;
+				return ERROR;
 		}
-		return -1;
+		return ERROR;
 	}
 
 	else if((par[0] == 'P') && (par[1] == 'I') && (par[2] == 'N')){
@@ -296,7 +303,7 @@ int16_t executeGet(char* par, char* val){
 			case 'B': return PINB; break;
 			case 'C': return PINC; break;
 			case 'D': return (PIND & 0xFC); break;
-			default: return -1; break;
+			default: return ERROR; break;
 			}
 		}
 		else if((val[0] == 'P') && (stringLength(par) == 3)){
@@ -306,18 +313,18 @@ int16_t executeGet(char* par, char* val){
 					case 'B': return ((PINB >> (par[2] - 0x30)) & 0x01); break;
 					case 'C': return ((PINB >> (par[2] - 0x30)) & 0x01); break;
 					case 'D':
-						if(par[2] > 1) //protect USART
+						if((par[2] - 0x30) > 1) //protect USART
 							return ((PIND >> (par[2] - 0x30)) & 0x01);
 						else
-							return -1;
+							return ERROR;
 						break;
-					default: return -1; break;
+					default: return ERROR; break;
 				}
 			}
 			else
-				return -1;
+				return ERROR;
 		}
-		return -1;
+		return ERROR;
 	}
 	else if((par[0] == 'P') && (par[1] == 'O') && (par[2] == 'R') && (par[3] == 'T')){
 		if((val[0] == 'P') && (stringLength(val) == 2)){
@@ -326,7 +333,7 @@ int16_t executeGet(char* par, char* val){
 			case 'B': return PORTB; break;
 			case 'C': return PORTC; break;
 			case 'D': return (PORTD & 0xFC); break;
-			default: return -1; break;
+			default: return ERROR; break;
 			}
 		}
 		else if((val[0] == 'P') && (stringLength(val) == 3)){
@@ -336,81 +343,107 @@ int16_t executeGet(char* par, char* val){
 					case 'B': return ((PORTB >> (val[2] - 0x30)) & 0x01); break;
 					case 'C': return ((PORTB >> (val[2] - 0x30)) & 0x01); break;
 					case 'D':
-						if(par[2] > 1) //protect USART
+						if((par[2] - 0x30) > 1) //protect USART
 							return ((PORTD >> (val[2]-0x30)) & 0x01);
 						else
-							return -1;
+							return ERROR;
 						break;
-					default: return -1; break;
+					default: return ERROR; break;
 				}
 			}
 			else
-				return -1;
+				return ERROR;
 		}
-		return -1;
+		return ERROR;
 	}
-	return -1;
+	return ERROR;
 }
 
 void parseLine(char* line){
 
 	char cmd[BUF_C];
+	char parameter[BUF_P];
+	char value[BUF_V];
 
 	get_group_from_line(0,line,cmd);
+	get_group_from_line(1,line,parameter);
+	get_group_from_line(2,line,value);
+	toLower(cmd);
+//	if(stringCompare(cmd,CMD_OPEN) > 0)
+		toUpper(parameter);
+	toUpper(value);
 
 //SET
 	if(stringCompare(cmd,CMD_SET) == 0){
-		char parameter[BUF_P];
-		char value[BUF_V];
-		get_group_from_line(1,line,parameter);
-		get_group_from_line(2,line,value);
-		toUpper(parameter);
-		toUpper(value);
+
+
 		if(stringLength(parameter)>0){
 			uint16_t parsedValue = 0;
 			int8_t status = parseValue(value,&parsedValue);
 			if(executeSet(parameter,parsedValue))
-				usart_write(CRLF"SET | %i: %s = %i"CRLF,status,parameter,parsedValue);
+				usart_write("SET | %i: %s = %i"CRLF,status,parameter,parsedValue);
 			else
-				usart_write(CRLF"ERR | %i: %s = %i"CRLF,status,parameter,parsedValue);
+				usart_write("ERR | %i: %s = %i"CRLF,status,parameter,parsedValue);
 		}
 	}
 //CFG
 	else if(stringCompare(cmd,CMD_CFG) == 0){
-		char parameter[BUF_P];
-		char value[BUF_V];
-		get_group_from_line(1,line,parameter);
-		get_group_from_line(2,line,value);
-		toUpper(parameter);
-		toUpper(value);
 		if(stringLength(parameter)>0){
 			uint16_t parsedValue = 0;
 			int8_t status = parseValue(value,&parsedValue);
 			if(executeCfg(parameter,parsedValue))
-				usart_write(CRLF"SET | %i: %s = %i"CRLF,status,parameter,parsedValue);
+				usart_write("DDR | %i: %s = %i"CRLF,status,parameter,parsedValue);
 			else
-				usart_write(CRLF"ERR | %i: %s = %i"CRLF,status,parameter,parsedValue);
+				usart_write("ERR | %i: %s = %i"CRLF,status,parameter,parsedValue);
 		}
 	}
 //GET
 	else if(stringCompare(cmd,CMD_GET) == 0){
-		char parameter[BUF_P];
-		char value[BUF_V];
-		get_group_from_line(1,line,parameter);
-		get_group_from_line(2,line,value);
-		toUpper(parameter);
-		toUpper(value);
 		int16_t status = -1;
 		if(stringLength(parameter)>0){
-//			TODO: DO GET STUFF HERE.
-			if((status = executeGet(parameter,value)) >= 0)
-				usart_write(CRLF"%s |  %s = %i"CRLF,parameter,value,status);
+			if((status = executeGet(parameter,value)) > ERROR)
+				usart_write("%s |  %s = %i"CRLF,parameter,value,status);
 			else
-				usart_write(CRLF"ERR |  %s = %i"CRLF,value,status);
+				usart_write("ERR |  %s = %i"CRLF,value,status);
 		}
 	}
+//OPEN
+#if USE_SD == 1
+	else if(stringCompare(cmd,CMD_OPEN) == 0){
+		uint32_t seek;
+		if(stringLength(parameter)>0){
+			if( MMC_FILE_OPENED == ffopen((uint8_t*)parameter,'r') ){
+				seek = file.length;
+				usart_write("OPEN | %s"CRLL,parameter);
+				char line_buf[40]={0};
+				uint8_t cnt=0;
+				do{
+					do{
+						line_buf[cnt++] = ffread();
+							if(line_buf[cnt-1]=='\r'){
+								line_buf[cnt-1]='\0';
+								usart_write("  > %s"CRLF"    ",line_buf);
+								parseLine(line_buf);
+								usart_write(CRLF);
+								cnt=0;
+								line_buf[cnt]='\0';
+								ffread();
+								seek--;
+							}
+					}while(--seek && cnt<40);
+					cnt=0;
+					line_buf[cnt]='\0';
+				}while(seek);
+				ffclose();
+				usart_write_str(CRLF);
+			}
+			else
+				usart_write("ERR |  OPEN %s"CRLF,parameter);
+		}
+	}
+#endif
 //!DEFAULT
 	else{
-		usart_write(CRLF"ERR | Unknown Command: %s"CRLF,cmd);
+		usart_write("ERR | Unknown Command: %s"CRLF,cmd);
 	}
 }

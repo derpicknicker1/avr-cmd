@@ -10,6 +10,8 @@
 
 	#include <stdio.h>
 
+	#define USE_SD 1 //also set in main.c
+
 	#define BUF_C 		16
 	#define BUF_P 		16
 	#define BUF_V 		16
@@ -23,6 +25,7 @@
 	#define CMD_SET 	"set"
 	#define CMD_CFG 	"cfg"
 	#define CMD_GET 	"get"
+	#define CMD_OPEN 	"open"
 
 	void get_group_from_line(uint8_t position, char* line, char* output);
 	int16_t HexWordToValue(char word);

@@ -32,8 +32,8 @@
 	// WICHTIGE SCHALTER
 
 	// schalter die den funktionsumfang aendern bzw, den funktionsumfang einiger funktionen :)
-	#define MMC_WRITE 			TRUE	// TRUE, dann mit write unterstuetzung, wenn FALSE dann read only !
-	#define MMC_OVER_WRITE 		TRUE	// TRUE und MMC_WRITE TRUE, dann kann ffwrite dateien ueberschreiben, wenn FALSE dann nur normales schreiben. um an eine datei anzuhaengen ist MMC_OVER_WRITE TRUE nicht noetig!
+	#define MMC_WRITE 			FALSE	// TRUE, dann mit write unterstuetzung, wenn FALSE dann read only !
+	#define MMC_OVER_WRITE 		FALSE	// TRUE und MMC_WRITE TRUE, dann kann ffwrite dateien ueberschreiben, wenn FALSE dann nur normales schreiben. um an eine datei anzuhaengen ist MMC_OVER_WRITE TRUE nicht noetig!
 	#define MMC_MULTI_BLOCK 	FALSE	// TRUE und MMC_OVER_WRITE FALSE, dann werden multiblock schreib/lese funktionen benutzt. ist schneller, wird aber moeglicherweise nicht von allen karten unterstützt. wenn FALSE ist normale operation
 	#define MMC_ENDIANNESS_LITTLE 	TRUE	// TRUE, dann ist der code auf littleendian ausgelegt. AVR ist littleendian. code ist auf littleendian optimiert!! siehe: http://de.wikipedia.org/wiki/Endianness
 	#define MMC_LFN_SUPPORT		FALSE	// TRUE, dann mit unterstuetzung fuer lange dateinamen. kostet wenn read und write benutzt wird um die 800 bytes flash...
@@ -42,13 +42,13 @@
 	// schalter die explizit funktionen mit kompilieren oder nicht!
 	#define MMC_TIME_STAMP 		FALSE 	// TRUE, dann werden die funktionen fat_getTime und fat_getFreeBytes mit kompiliert. siehe auch abschnitt: ZEIT FUNKTIONEN, weiter unten
 	#define MMC_RM 				FALSE	// TRUE und MMC_WRITE TRUE, dann wird die funktion ffrm mit kompiliert.
-	#define MMC_SEEK			TRUE	// TRUE,dann wird die funktion ffseek mit kompiliert. mit dieser funktion kann man in einer geoeffneten datei vor und zurueck spulen. nur in kombination mit MMC_OVER_WRITE TRUE kann in einer datei ueberschrieben werden.
-	#define MMC_MKDIR			TRUE	// TRUE und MMC_WRITE TRUE, dann wird die funktion ffmkdir mit kompiliert. mit dieser funktion kann man ordner anlegen.
+	#define MMC_SEEK			FALSE	// TRUE,dann wird die funktion ffseek mit kompiliert. mit dieser funktion kann man in einer geoeffneten datei vor und zurueck spulen. nur in kombination mit MMC_OVER_WRITE TRUE kann in einer datei ueberschrieben werden.
+	#define MMC_MKDIR			FALSE	// TRUE und MMC_WRITE TRUE, dann wird die funktion ffmkdir mit kompiliert. mit dieser funktion kann man ordner anlegen.
 	#define MMC_GET_FREE_BYTES	FALSE	// TRUE, dann wird die funkton fat_getFreeBytes mit kompiliert. mit dieser funktion kann der freie platzt auf der karte ermittelt werden
 	#define MMC_LS				FALSE	// TRUE, dann wird die funktion ffls mit kompiliert. mit dieser funkion kann man die dateien auf der karte anzeigen lassen
-	#define MMC_CD				TRUE	// TRUE, dann werden die funktionen ffcd und ffcdLower mit kompiliert. mit diesen funktionen kann man in ein verzeichnis wechseln oder aus einem verzeichnis ein verzeichnis hoeher wechseln.
+	#define MMC_CD				FALSE	// TRUE, dann werden die funktionen ffcd und ffcdLower mit kompiliert. mit diesen funktionen kann man in ein verzeichnis wechseln oder aus einem verzeichnis ein verzeichnis hoeher wechseln.
 	#define MMC_FILE_EXSISTS	FALSE	// TRUE, dann wird die funktion ffileExsists mit kompiliert. mit dieser funktion kann geprueft werden, ob es die datei im aktuellen verzeinis gibt !
-	#define MMC_WRITE_STRING	TRUE	// TRUE und MMC_WRITE TRUE, dann wird die funktion ffwrites mit kompiliert. mit dieser funktion koennen strings auf die karte geschrieben werden.
+	#define MMC_WRITE_STRING	FALSE	// TRUE und MMC_WRITE TRUE, dann wird die funktion ffwrites mit kompiliert. mit dieser funktion koennen strings auf die karte geschrieben werden.
 	#define MMC_WRITEN			FALSE	// TRUE	und MMC_WRITE TRUE, dann wird die funktion ffwriten mit kompiliert.	mit dieser funktion koennen mehrere zeichen auf die karte geschrieben werden!
 
 	// vorsicht, da die variable die die sektoren zaehlt ein short ist (MMC_MAX_CLUSTERS_IN_ROW*fat.secPerClust) !!

@@ -223,14 +223,7 @@ int8_t executeSet(char* par, uint16_t val){
 		else
 			return 0;
 	}
-
-	return 0;
-}
-
-
-int8_t executeCfg(char* par, uint16_t val){
-
-	if((par[0] == 'P') && (stringLength(par) == 2)){
+	if((par[0] == 'D') && (stringLength(par) == 2)){
 		switch(par[1]){
 		case 'A': DDRA = val; return 1; break;
 		case 'B': DDRB = val; return 1; break;
@@ -240,7 +233,7 @@ int8_t executeCfg(char* par, uint16_t val){
 		default: return 0; break;
 		}
 	}
-	else if((par[0] == 'P') && (stringLength(par) == 3)){
+	else if((par[0] == 'D') && (stringLength(par) == 3)){
 		if((par[2] >= 0x30) && (par[2] <= 0x37)){
 			switch(par[1]){
 				case 'A': (val)?(DDRA |= (1 << (par[2] - 0x30))):(DDRA &= ~(1 << (par[2] - 0x30))); return 1; break;
@@ -370,30 +363,16 @@ void parseLine(char* line){
 	get_group_from_line(1,line,parameter);
 	get_group_from_line(2,line,value);
 	toLower(cmd);
-//	if(stringCompare(cmd,CMD_OPEN) > 0)
-		toUpper(parameter);
+	toUpper(parameter);
 	toUpper(value);
 
 //SET
 	if(stringCompare(cmd,CMD_SET) == 0){
-
-
 		if(stringLength(parameter)>0){
 			uint16_t parsedValue = 0;
 			int8_t status = parseValue(value,&parsedValue);
 			if(executeSet(parameter,parsedValue))
 				usart_write("SET | %i: %s = %i"CRLF,status,parameter,parsedValue);
-			else
-				usart_write("ERR | %i: %s = %i"CRLF,status,parameter,parsedValue);
-		}
-	}
-//CFG
-	else if(stringCompare(cmd,CMD_CFG) == 0){
-		if(stringLength(parameter)>0){
-			uint16_t parsedValue = 0;
-			int8_t status = parseValue(value,&parsedValue);
-			if(executeCfg(parameter,parsedValue))
-				usart_write("DDR | %i: %s = %i"CRLF,status,parameter,parsedValue);
 			else
 				usart_write("ERR | %i: %s = %i"CRLF,status,parameter,parsedValue);
 		}

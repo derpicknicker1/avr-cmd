@@ -11,5 +11,4 @@ delay m 1000
 set pa0 on
 delay m 1000
 set pa0 off
-delay m 1000
 get pin pa0

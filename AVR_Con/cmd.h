@@ -39,6 +39,5 @@
 	void parseLine(char* line);
 	int8_t executeSet(char* par, uint16_t val);
 	int16_t executeGet(char* par, char* val);
-	int8_t executeCfg(char* par, uint16_t val);
 
 #endif /* CMD_H_ */

@@ -28,7 +28,6 @@ void get_group_from_line(uint8_t position, char* line, char* output){
 			*output++=line[i];
 		}
 		i++;
-
 	}
 	*output = '\0';
 }
@@ -428,11 +427,14 @@ void parseLine(char* line){
 		int8_t status = parseValue(value,&parsedValue);
 		if((parameter[0] == 'M') && (status > ERROR)){
 			usart_write("DELAY |  %sS = %i"CRLF,parameter,parsedValue);
-			_delay_ms(parsedValue);
+			for(uint16_t i = 0;i < parsedValue;i++)
+				_delay_ms(1);
+
 		}
 		else if((parameter[0] == 'U') && (status > ERROR)){
 			usart_write("DELAY |  %sS = %i"CRLF,parameter,parsedValue);
-			_delay_us(parsedValue);
+			for(uint16_t i = 0;i < parsedValue;i++)
+				_delay_us(1);
 		}
 		else
 			usart_write("ERR |  %s = %i"CRLF,value,status);

@@ -10,7 +10,7 @@
 #include "cmd.h"
 
 #if USE_SD == 1
-	#include "sd/mmc_config.h"	// Hier werden alle noetigen Konfigurationen vorgenommen, umbedingt anschauen !
+	#include "sd/mmc_config.h"	// Hier werden alle noetigen Konfigurationen vorgenommen, unbedingt anschauen !
 	#include "sd/file.h"
 	#include "sd/fat.h"
 	#include "sd/mmc.h"

@@ -26,6 +26,7 @@
 	#define CMD_CFG 	"cfg"
 	#define CMD_GET 	"get"
 	#define CMD_OPEN 	"open"
+	#define CMD_DELAY 	"delay"
 
 	void get_group_from_line(uint8_t position, char* line, char* output);
 	int16_t HexWordToValue(char word);

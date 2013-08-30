@@ -5,6 +5,7 @@
  *      Author: Grisu
  */
 #include <stdio.h>
+#include <util/delay.h>
 #include "usart.h"
 #include "cmd.h"
 
@@ -441,7 +442,25 @@ void parseLine(char* line){
 				usart_write("ERR |  OPEN %s"CRLF,parameter);
 		}
 	}
+
+//DELAY - only needed with SD-Card support for scripting
+	else if(stringCompare(cmd,CMD_DELAY) == 0){
+		uint16_t parsedValue = 0;
+		int8_t status = parseValue(value,&parsedValue);
+		if((parameter[0] == 'M') && (status > ERROR)){
+			usart_write("DELAY |  %sS = %i"CRLF,parameter,parsedValue);
+			_delay_ms(parsedValue);
+		}
+		else if((parameter[0] == 'U') && (status > ERROR)){
+			usart_write("DELAY |  %sS = %i"CRLF,parameter,parsedValue);
+			_delay_us(parsedValue);
+		}
+		else
+			usart_write("ERR |  %s = %i"CRLF,value,status);
+	}
 #endif
+
+
 //!DEFAULT
 	else{
 		usart_write("ERR | Unknown Command: %s"CRLF,cmd);

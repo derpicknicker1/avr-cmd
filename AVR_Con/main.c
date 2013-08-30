@@ -31,10 +31,10 @@ int main(void){
 	usart_init(9600);
 	sei();
 	usart_write_str(CRLL"AVR-Con alpha 0.1"CRLF);
+
 #if USE_SD == 1
 	usart_write_str("Boot SD");
 
-	// sd/mmc config  **************************************************
 	if( FALSE == mmc_init() ){
 		usart_write_str(CRLF"ERR | MMC-Init: System halted");
 		return 0;
@@ -42,13 +42,11 @@ int main(void){
 
 	usart_write_str("...");
 
-	// fat config ******************************************************
 	if( FALSE == fat_loadFatData() ){
 		usart_write_str(CRLF"ERR | FAT-Init: System halted");
 		return 0;
 	}
 
-	// wenn auf dem terminal "Boot...OK" zu lesen ist, war initialisierung erfolgreich!
 	usart_write_str("OK"CRLL);
 #endif
 

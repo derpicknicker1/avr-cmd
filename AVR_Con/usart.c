@@ -34,8 +34,9 @@
 #include <avr/io.h>
 
 	
-volatile unsigned int buffercounter = 0;
+volatile unsigned int buffercounter = 0,esc_flag1=0,esc_flag2=0,histpos=0;
 
+char usart_rx_hist[5][BUFFER_SIZE];
 char usart_rx_buffer[BUFFER_SIZE];
 char *rx_buffer_pointer_in	= &usart_rx_buffer[0];
 char *rx_buffer_pointer_out	= &usart_rx_buffer[0];
@@ -44,7 +45,6 @@ char *rx_buffer_pointer_out	= &usart_rx_buffer[0];
 //Init serielle Schnittstelle
 void usart_init(unsigned long baudrate) 
 { 
-
 	//Serielle Schnittstelle 1
   	//Enable TXEN im Register UCR TX-Data Enable
 	UCR =(1 << TXEN | 1 << RXEN | 1<< RXCIE);
@@ -55,8 +55,6 @@ void usart_init(unsigned long baudrate)
 	//UCSRC |= (1<<USBS);
 	//Teiler wird gesetzt 
 	UBRR=(F_CPU / (baudrate * 16L) - 1);
-	usart_status.usart_disable = 0;
-
 }
 
 //----------------------------------------------------------------------------
@@ -64,15 +62,12 @@ void usart_init(unsigned long baudrate)
 void usart_write_char(char c)
 {
 
-        if(!usart_status.usart_disable)
-        {
-            //Warten solange bis Zeichen gesendet wurde
-            while(!(USR & (1<<UDRE)));
-            //Ausgabe des Zeichens
-            UDR = c;
-        }
-        return;
+	//Warten solange bis Zeichen gesendet wurde
+	while(!(USR & (1<<UDRE)));
+	//Ausgabe des Zeichens
+	UDR = c;
 
+	return;
 }
 
 //------------------------------------------------------------------------------
@@ -178,60 +173,54 @@ void usart_write_str(char *str)
 
 ISR (USART_RX)
 {
-	if(!usart_status.usart_disable)
-	{
-		unsigned char receive_char;
-		receive_char = (UDR);
-		
-		#if USART_ECHO
-		usart_write_char(receive_char);
-		#endif
-	
-		if (usart_status.usart_ready)
-		{
-			usart_status.usart_rx_ovl = 1;
-			return; 
-		}
-        
-        if (receive_char == 0x08)
-        {
-            if (buffercounter) buffercounter--;
-            return;
-        }
-    
-		if (receive_char == '\r' && (!(usart_rx_buffer[buffercounter-1] == '\\')))
-		{
-			usart_rx_buffer[buffercounter] = 0;
-			buffercounter = 0;
-			usart_status.usart_ready = 1;
-			return;    
-		}
-	
-		if (buffercounter < BUFFER_SIZE - 1)
-		{
-			usart_rx_buffer[buffercounter++] = receive_char;    
-		}
-		else{
-			usart_rx_buffer[buffercounter] = 0;
-			buffercounter = 0;
-			usart_status.usart_ready = 1;
-		}
-	}
-	else
-	{
 
-		if(rx_buffer_pointer_in == (rx_buffer_pointer_out - 1))
-		{
-			//Datenverlust
-			return;
-		}
+	unsigned char receive_char;
+	receive_char = (UDR);
+
+	if(receive_char == 27)
+		esc_flag1=1;
+	else if((receive_char == 31) && esc_flag1)
+		esc_flag2=1;
+	else if((receive_char == 67) && esc_flag2){
+		esc_flag1=0;
+		esc_flag2=0;
+
+	}
+
+
+	#if USART_ECHO
+	usart_write_char(receive_char);
+	#endif
+
+	if (usart_status.usart_ready){
+		usart_status.usart_rx_ovl = 1;
+		return;
+	}
 	
-		*rx_buffer_pointer_in++ = UDR;
-	
-		if (rx_buffer_pointer_in == &usart_rx_buffer[BUFFER_SIZE-1])
-		{
-			rx_buffer_pointer_in = &usart_rx_buffer[0];
+	if (receive_char == 0x08){
+		if (buffercounter){
+			buffercounter--;
+			#if USART_ECHO
+			usart_write_str("\x1b[K");
+			#endif
 		}
+
+		return;
+	}
+
+	if (receive_char == '\r' && (!(usart_rx_buffer[buffercounter-1] == '\\'))){
+		usart_rx_buffer[buffercounter] = 0;
+		buffercounter = 0;
+		usart_status.usart_ready = 1;
+		return;
+	}
+
+	if (buffercounter < BUFFER_SIZE - 1)
+		usart_rx_buffer[buffercounter++] = receive_char;
+	else{
+		usart_rx_buffer[buffercounter] = 0;
+		buffercounter = 0;
+		usart_status.usart_ready = 1;
 	}
 	return;
 }

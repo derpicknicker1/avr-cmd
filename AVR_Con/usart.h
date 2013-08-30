@@ -29,6 +29,7 @@
 	#define USART_ECHO	1
     #define BUFFER_SIZE	100
 
+
 	#define CRLF "\r\n"
 	#define CRLL "\r\n\n"
 	#define CR "\r"
@@ -42,7 +43,6 @@
 	struct {
 		volatile unsigned char usart_ready:1;
 		volatile unsigned char usart_rx_ovl:1;
-		volatile unsigned char usart_disable:1; //benötigt für ftp2com
 	}usart_status ;
 	
 	//Anpassen der seriellen Schnittstellen Register wenn ein ATMega128 benutzt wird

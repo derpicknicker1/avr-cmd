@@ -23,7 +23,6 @@
 	#define CONV_O 		3	// 	 3 = octal
 	#define CONV_SW 	4	//	 4 = on/off
 	#define CMD_SET 	"set"
-	#define CMD_CFG 	"cfg"
 	#define CMD_GET 	"get"
 	#define CMD_OPEN 	"open"
 	#define CMD_DELAY 	"delay"

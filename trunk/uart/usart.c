@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------*/
 
 #include "usart.h"
+#include "cmd.h"
 
 
 #include <avr/interrupt.h>
@@ -34,12 +35,11 @@
 #include <avr/io.h>
 
 	
-volatile unsigned int buffercounter = 0,esc_flag1=0,esc_flag2=0,histpos=0;
+volatile unsigned int buffercounter = 0,hist_flag=0,esc_flag1=0,esc_flag2=0,histpos=0;
 
-char usart_rx_hist[5][BUFFER_SIZE];
 char usart_rx_buffer[BUFFER_SIZE];
-char *rx_buffer_pointer_in	= &usart_rx_buffer[0];
-char *rx_buffer_pointer_out	= &usart_rx_buffer[0];
+char *ret;
+volatile char *rx_buffer_pointer	= &usart_rx_buffer[0];
 	
 //----------------------------------------------------------------------------
 //Init serielle Schnittstelle
@@ -176,21 +176,56 @@ ISR (USART_RX)
 
 	unsigned char receive_char;
 	receive_char = (UDR);
-
-	if(receive_char == 27)
-		esc_flag1=1;
-	else if((receive_char == 31) && esc_flag1)
-		esc_flag2=1;
-	else if((receive_char == 67) && esc_flag2){
-		esc_flag1=0;
-		esc_flag2=0;
-
+	if(buffercounter==0 && hist_flag){
+		free(ret);
+		rx_buffer_pointer = &usart_rx_buffer[0];
+		hist_flag=0;
 	}
 
+
+	if(receive_char == 27){
+		esc_flag1=1;
+		return;
+	}
+	else if((receive_char == '[') && esc_flag1){
+		esc_flag2=1;
+		return;
+	}
+	else if((receive_char == 'A') && esc_flag2){
+		esc_flag1=0;
+		esc_flag2=0;
+		buffercounter = 4;
+		ret=malloc(100*sizeof(char));
+		rx_buffer_pointer=ret;
+		*ret='h';
+		*(ret+1)='o';
+		*(ret+2)='c';
+		*(ret+3)='h';
+		*(ret+4)='\0';
+
+		hist_flag=1;
+		usart_write("P | %s"CRLF,rx_buffer_pointer);
+		usart_write("B | %s"CRLF,usart_rx_buffer);
+		usart_write("R %i | %s"CRLF,buffercounter,ret);
+
+		return;
+		//A hoch
+		//B runter
+		//C rechts
+		//D links
+	}
+	else if(esc_flag2){
+		esc_flag1=0;
+		esc_flag2=0;
+		return;
+	}
+	else
+		esc_flag1 = esc_flag2 = 0;
 
 	#if USART_ECHO
 	usart_write_char(receive_char);
 	#endif
+
 
 	if (usart_status.usart_ready){
 		usart_status.usart_rx_ovl = 1;
@@ -208,17 +243,17 @@ ISR (USART_RX)
 		return;
 	}
 
-	if (receive_char == '\r' && (!(usart_rx_buffer[buffercounter-1] == '\\'))){
-		usart_rx_buffer[buffercounter] = 0;
+	if (receive_char == '\r' && (!(*(rx_buffer_pointer+buffercounter-1) == '\\'))){
+		*(rx_buffer_pointer+buffercounter) = 0;
 		buffercounter = 0;
 		usart_status.usart_ready = 1;
 		return;
 	}
 
 	if (buffercounter < BUFFER_SIZE - 1)
-		usart_rx_buffer[buffercounter++] = receive_char;
+		*(rx_buffer_pointer+buffercounter++) = receive_char;
 	else{
-		usart_rx_buffer[buffercounter] = 0;
+		*(rx_buffer_pointer+buffercounter) = 0;
 		buffercounter = 0;
 		usart_status.usart_ready = 1;
 	}

@@ -34,11 +34,12 @@
 	#define CRLL "\r\n\n"
 	#define CR "\r"
 	#define LF "\n"
+	#define ESC_DOWN "\x1b[B"
 
 	volatile unsigned int buffercounter;
 	char usart_rx_buffer[BUFFER_SIZE];
-	char *rx_buffer_pointer_in;
-	char *rx_buffer_pointer_out;
+	volatile char *rx_buffer_pointer;
+
 	
 	struct {
 		volatile unsigned char usart_ready:1;

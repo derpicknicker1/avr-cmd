@@ -373,7 +373,7 @@ void parseLine(char* line){
 			uint16_t parsedValue = 0;
 			int8_t status = parseValue(value,&parsedValue);
 			if(executeSet(parameter,parsedValue))
-				usart_write("SET | %i: %s = %i"CRLF,status,parameter,parsedValue);
+				usart_write("SET | %i: %s = %i"CRLF,status,value,parsedValue);
 			else
 				usart_write("ERR | %i: %s = %i"CRLF,status,parameter,parsedValue);
 		}
@@ -462,4 +462,15 @@ void parseLine(char* line){
 	if(cmd[0]){
 		usart_write("ERR | Unknown Command: %s"CRLF,cmd);
 	}
+}
+
+char *my_strcpy(char *destination, char *source)
+{
+    char *p = destination;
+    while (*source != '\0')
+    {
+        *p++ = *source++;
+    }
+    *p = '\0';
+    return destination;
 }

@@ -41,13 +41,12 @@
 	#endif
 
 	#define ESC_DOWN "\x1b[B"
+	#define ESC_CLRL "\x1b[K"
 	#define KEY_UP 'A'
+	#define KEY_DOWN 'B'
 
-	volatile unsigned int buffercounter;
-	char usart_rx_buffer[BUFFER_SIZE];
-	volatile char *rx_buffer_pointer;
+	char *rx_buffer_pointer;
 
-	
 	struct {
 		volatile unsigned char usart_ready:1;
 		volatile unsigned char usart_rx_ovl:1;
@@ -105,7 +104,8 @@
 	
 	void usart_write_P (const char *Buffer,...);
 	#define usart_write(format, args...)   usart_write_P(PSTR(format) , ## args)
-	
+
+	void hist_add(char *ptr);
 	//----------------------------------------------------------------------------
 
 #endif //_UART_H

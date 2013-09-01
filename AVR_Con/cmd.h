@@ -8,17 +8,17 @@
 #ifndef CMD_H_
 	#define CMD_H_
 
-	#define BUF_C 		16
-	#define BUF_P 		16
-	#define BUF_V 		16
+	#define BUF_C 			16
+	#define BUF_P 			16
+	#define BUF_V 			16
 
-	#define ERROR 		-1	//	-1 = error
-	#define CONV_D 		0	//	 0 = decimal
-	#define CONV_H 		1	//	 1 = hex
-	#define CONV_B 		2	//	 2 = binary
-	#define CONV_O 		3	// 	 3 = octal
-	#define CONV_SW 	4	//	 4 = on/off
-	#define CMD_SET_STR	"set"
+	#define ERROR 			-1	//	-1 = error
+	#define CONV_D 			0	//	 0 = decimal
+	#define CONV_H 			1	//	 1 = hex
+	#define CONV_B 			2	//	 2 = binary
+	#define CONV_O 			3	// 	 3 = octal
+	#define CONV_SW 		4	//	 4 = on/off
+	#define CMD_SET_STR		"set"
 	#define CMD_GET_STR 	"get"
 	#define CMD_OPEN_STR	"open"
 	#define CMD_DELAY_STR 	"delay"
@@ -34,5 +34,6 @@
 	void parseLine(char* line);
 	int8_t executeSet(char* par, uint16_t val);
 	int16_t executeGet(char* par, char* val);
+	char *my_strcpy(char *destination, char *source);
 
 #endif /* CMD_H_ */

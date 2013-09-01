@@ -24,6 +24,7 @@
 
 #include "usart.h"
 #include "config.h"
+#include "cmd.h"
 
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -34,11 +35,17 @@
 #include <avr/io.h>
 
 	
-volatile unsigned int buffercounter = 0,esc_flag1=0,esc_flag2=0,histpos=0;
+volatile unsigned int 	buffercounter = 0,
+						esc_flag1=0,
+						esc_flag2=0,
+						histpos=0,
+						hist_fill=0,
+						hist_chg=0;
 
-char usart_rx_hist[5][BUFFER_SIZE];
 char usart_rx_buffer[BUFFER_SIZE];
-//char *rx_buffer_pointer	= &usart_rx_buffer[0];
+char *hist_buffer_pointer[HIST_BUFFER_SIZE];
+char temp_buf[BUFFER_SIZE]="set pa 1";
+char *rx_buffer_pointer	= &usart_rx_buffer[0];
 	
 //----------------------------------------------------------------------------
 //Init serielle Schnittstelle
@@ -175,6 +182,10 @@ ISR (USART_RX)
 
 	unsigned char receive_char;
 	receive_char = (UDR);
+	if(buffercounter==0){
+		rx_buffer_pointer = &usart_rx_buffer[0];
+		usart_rx_buffer[0] = '\0';
+	}
 
 	//handle ESC-Sequence
 	//drop all ESC-Sequence Chars and detect selected Sequences
@@ -190,7 +201,32 @@ ISR (USART_RX)
 	else if((receive_char == KEY_UP) && esc_flag2){ //Detect Arrow-Up ESC-Sequence an drop char
 		esc_flag1=0;
 		esc_flag2=0;
-		usart_write("KEY_UP");
+		if(histpos < hist_fill){
+			if(hist_chg == 1)
+				histpos++;
+			rx_buffer_pointer=hist_buffer_pointer[histpos++];
+			usart_write(CR"> "ESC_CLRL"%s",rx_buffer_pointer);
+			buffercounter=stringLength(rx_buffer_pointer);
+			hist_chg = 0;
+		}
+		return;
+	}
+	else if((receive_char == KEY_DOWN) && esc_flag2){ //Detect Arrow-Down ESC-Sequence an drop char
+		esc_flag1=0;
+		esc_flag2=0;
+		if(histpos > 0){
+			if(hist_chg == 0)
+				histpos--;
+			rx_buffer_pointer=hist_buffer_pointer[--histpos];
+			usart_write(CR"> "ESC_CLRL"%s",rx_buffer_pointer);
+			buffercounter=stringLength(rx_buffer_pointer);
+			hist_chg = 1;
+		}
+		else{
+			usart_write(CR"> "ESC_CLRL);
+			buffercounter=0;
+			hist_chg = 0;
+		}
 		return;
 	}
 	else if (esc_flag2){ //drop any other ESC-Sequence char
@@ -205,7 +241,8 @@ ISR (USART_RX)
 
 
 	#if USART_ECHO
-	usart_write_char(receive_char);
+	if(!((buffercounter == 0) && (receive_char == 0x08 || receive_char == 0x7F)))
+		usart_write_char(receive_char);
 	#endif
 
 	if (usart_status.usart_ready){
@@ -213,6 +250,9 @@ ISR (USART_RX)
 		return;
 	}
 	
+	//handle backspace
+		//some Terminals use DEL (0x7f) instead
+		//see below
 	if (receive_char == 0x08){
 		if (buffercounter){
 			buffercounter--;
@@ -220,26 +260,50 @@ ISR (USART_RX)
 			usart_write_str("\x1b[K");
 			#endif
 		}
-
 		return;
 	}
 
-	if (receive_char == '\r' && (!(usart_rx_buffer[buffercounter-1] == '\\'))){
-		usart_rx_buffer[buffercounter] = 0;
+	//handle DEL
+		//some Terminals use backspace (0x08) instead
+		//see above
+	if (receive_char == 0x7F){
+		if (buffercounter){
+			buffercounter--;
+			#if USART_ECHO
+			usart_write_str("\x1b[K");
+			#endif
+		}
+		return;
+	}
+
+	if (receive_char == '\r' && (!(*(rx_buffer_pointer+buffercounter-1) == '\\'))){
+		*(rx_buffer_pointer+buffercounter) = 0;
+		hist_add(my_strcpy(malloc(stringLength(rx_buffer_pointer)*sizeof(char)+1),rx_buffer_pointer));
 		buffercounter = 0;
+		histpos=0;
 		usart_status.usart_ready = 1;
 		return;
 	}
 
 	if (buffercounter < BUFFER_SIZE - 1)
-		usart_rx_buffer[buffercounter++] = receive_char;
+		*(rx_buffer_pointer+buffercounter++) = receive_char;
 	else{
-		usart_rx_buffer[buffercounter] = 0;
+		*(rx_buffer_pointer+buffercounter) = 0;
+		hist_add(my_strcpy(malloc(stringLength(rx_buffer_pointer)*sizeof(char)+1),rx_buffer_pointer));
 		buffercounter = 0;
+		histpos=0;
 		usart_status.usart_ready = 1;
 	}
 	return;
 }
 
+void hist_add(char *ptr){
 
+	for(int i = (HIST_BUFFER_SIZE-2); i >= 0; i--){
+		hist_buffer_pointer[i+1] = hist_buffer_pointer[i];
+	}
+	hist_buffer_pointer[0]=ptr;
+	if(hist_fill < HIST_BUFFER_SIZE)
+		hist_fill++;
 
+}

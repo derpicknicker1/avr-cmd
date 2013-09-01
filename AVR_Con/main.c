@@ -56,7 +56,7 @@ int main(void){
 
 		while(!usart_status.usart_ready);
 		usart_write_str(CRLF);
-		parseLine(usart_rx_buffer);
+		parseLine(rx_buffer_pointer);
 
 	}
 

@@ -8,10 +8,6 @@
 #ifndef CMD_H_
 	#define CMD_H_
 
-	#include <stdio.h>
-
-	#define USE_SD 1 //also set in main.c
-
 	#define BUF_C 		16
 	#define BUF_P 		16
 	#define BUF_V 		16
@@ -22,10 +18,10 @@
 	#define CONV_B 		2	//	 2 = binary
 	#define CONV_O 		3	// 	 3 = octal
 	#define CONV_SW 	4	//	 4 = on/off
-	#define CMD_SET 	"set"
-	#define CMD_GET 	"get"
-	#define CMD_OPEN 	"open"
-	#define CMD_DELAY 	"delay"
+	#define CMD_SET_STR	"set"
+	#define CMD_GET_STR 	"get"
+	#define CMD_OPEN_STR	"open"
+	#define CMD_DELAY_STR 	"delay"
 
 	void get_group_from_line(uint8_t position, char* line, char* output);
 	int16_t HexWordToValue(char word);

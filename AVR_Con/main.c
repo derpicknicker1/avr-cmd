@@ -6,10 +6,9 @@
  */
 
 #include <avr/interrupt.h>
+#include "config.h"
 #include "usart.h"
 #include "cmd.h"
-
-#define USE_SD 1 //also set in cmd.h
 
 #if USE_SD == 1
 	#include "sd/mmc_config.h"	// Hier werden alle noetigen Konfigurationen vorgenommen, unbedingt anschauen !
@@ -46,10 +45,9 @@ int main(void){
 		usart_write_str(CRLF"ERR | FAT-Init: System halted");
 		return 0;
 	}
-
-	usart_write_str("OK"CRLL);
 #endif
 
+	usart_write_str("OK"CRLL);
 
 	while(1){
 

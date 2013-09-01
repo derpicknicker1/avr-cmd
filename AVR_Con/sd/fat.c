@@ -4,9 +4,11 @@
  *	Autor: Daniel R.
  */
 
+#include "../config.h"
+
+#if USE_SD == 1
+
 #include <string.h>
-
-
 #include "mmc_config.h"
 #include "fat.h"
 #include "file.h"
@@ -1234,5 +1236,6 @@ uint64_t fat_getFreeBytes(void){
 }
 #endif
 
+#endif//USE_SD
 
 

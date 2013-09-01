@@ -3,6 +3,10 @@
  *  Neuste Version: http://www.mikrocontroller.net/svnbrowser/avr-fat32/
  *	Autor: Daniel R.
  */
+#include "../config.h"
+
+#if USE_SD == 1
+
 #include <avr/interrupt.h>
 #include "mmc_config.h"
 #include "mmc.h"
@@ -634,5 +638,5 @@ uint8_t mmc_protected(void) {
   }
 #endif
 
-
+#endif //USE_SD
 

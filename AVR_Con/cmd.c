@@ -8,6 +8,7 @@
 #include <util/delay.h>
 #include "usart.h"
 #include "cmd.h"
+#include "config.h"
 
 #if USE_SD == 1
 	#include "sd/mmc_config.h"	// Hier werden alle noetigen Konfigurationen vorgenommen, unbedingt anschauen !
@@ -366,7 +367,8 @@ void parseLine(char* line){
 	toUpper(value);
 
 //SET
-	if(stringCompare(cmd,CMD_SET) == 0){
+#if CMD_SET == 1
+	if(stringCompare(cmd,CMD_SET_STR) == 0){
 		if(stringLength(parameter)>0){
 			uint16_t parsedValue = 0;
 			int8_t status = parseValue(value,&parsedValue);
@@ -375,9 +377,13 @@ void parseLine(char* line){
 			else
 				usart_write("ERR | %i: %s = %i"CRLF,status,parameter,parsedValue);
 		}
+		cmd[0]='\0';
 	}
+#endif
+
 //GET
-	else if(stringCompare(cmd,CMD_GET) == 0){
+#if CMD_SET == 1
+	if(stringCompare(cmd,CMD_GET_STR) == 0){
 		int16_t status = -1;
 		if(stringLength(parameter)>0){
 			if((status = executeGet(parameter,value)) > ERROR)
@@ -385,10 +391,15 @@ void parseLine(char* line){
 			else
 				usart_write("ERR |  %s = %i"CRLF,value,status);
 		}
+		cmd[0]='\0';
 	}
+#endif
+
+
 //OPEN
 #if USE_SD == 1
-	else if(stringCompare(cmd,CMD_OPEN) == 0){
+#if CMD_OPEN == 1
+	if(stringCompare(cmd,CMD_OPEN_STR) == 0){
 		uint32_t seek;
 		if(stringLength(parameter)>0){
 			if( MMC_FILE_OPENED == ffopen((uint8_t*)parameter,'r') ){
@@ -419,10 +430,13 @@ void parseLine(char* line){
 			else
 				usart_write("ERR |  OPEN %s"CRLF,parameter);
 		}
+		cmd[0]='\0';
 	}
+#endif
 
 //DELAY - only needed with SD-Card support for scripting
-	else if(stringCompare(cmd,CMD_DELAY) == 0){
+#if CMD_DELAY == 1
+	if(stringCompare(cmd,CMD_DELAY_STR) == 0){
 		uint16_t parsedValue = 0;
 		int8_t status = parseValue(value,&parsedValue);
 		if((parameter[0] == 'M') && (status > ERROR)){
@@ -438,12 +452,14 @@ void parseLine(char* line){
 		}
 		else
 			usart_write("ERR |  %s = %i"CRLF,value,status);
+		cmd[0]='\0';
 	}
 #endif
-
+#endif//USE_SD
 
 //!DEFAULT
-	else{
+
+	if(cmd[0]){
 		usart_write("ERR | Unknown Command: %s"CRLF,cmd);
 	}
 }

@@ -3,11 +3,15 @@
  *  Neuste Version: http://www.mikrocontroller.net/svnbrowser/avr-fat32/
  *	Autor: Daniel R.
  */
+#include "../config.h"
+
+#if USE_SD == 1
 
 #include "mmc_config.h"
 #include "mmc.h"
 #include "fat.h"
 #include "file.h"
+
 
 struct File_t file;			// wichtige dateibezogene daten/variablen
 
@@ -722,6 +726,7 @@ void ffwriten( uint8_t *s, uint16_t n ){
   }
 #endif
 
+#endif //USE_SD
 
 
 

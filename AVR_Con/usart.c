@@ -23,7 +23,7 @@
 ------------------------------------------------------------------------------*/
 
 #include "usart.h"
-
+#include "config.h"
 
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -38,8 +38,7 @@ volatile unsigned int buffercounter = 0,esc_flag1=0,esc_flag2=0,histpos=0;
 
 char usart_rx_hist[5][BUFFER_SIZE];
 char usart_rx_buffer[BUFFER_SIZE];
-char *rx_buffer_pointer_in	= &usart_rx_buffer[0];
-char *rx_buffer_pointer_out	= &usart_rx_buffer[0];
+//char *rx_buffer_pointer	= &usart_rx_buffer[0];
 	
 //----------------------------------------------------------------------------
 //Init serielle Schnittstelle
@@ -177,14 +176,31 @@ ISR (USART_RX)
 	unsigned char receive_char;
 	receive_char = (UDR);
 
-	if(receive_char == 27)
+	//handle ESC-Sequence
+	//drop all ESC-Sequence Chars and detect selected Sequences
+	//TODO: drop following '~' eg. when Page-Up is pressed('\x1b[5~')
+	if(receive_char == 0x1b){ //Drop begin of ESC-Sequence
 		esc_flag1=1;
-	else if((receive_char == 31) && esc_flag1)
+		return;
+	}
+	else if((receive_char == '[') && esc_flag1){ //Drop second Char of ESC-Sequence
 		esc_flag2=1;
-	else if((receive_char == 67) && esc_flag2){
+		return;
+	}
+	else if((receive_char == KEY_UP) && esc_flag2){ //Detect Arrow-Up ESC-Sequence an drop char
 		esc_flag1=0;
 		esc_flag2=0;
-
+		usart_write("KEY_UP");
+		return;
+	}
+	else if (esc_flag2){ //drop any other ESC-Sequence char
+		esc_flag1=0;
+		esc_flag2=0;
+		return;
+	}
+	else{ // ESC-Sequence incomplete
+		esc_flag1=0;
+		esc_flag2=0;
 	}
 
 

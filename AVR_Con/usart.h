@@ -25,16 +25,23 @@
 	#define _UART_H
 
 	#include <avr/pgmspace.h>
+	#include "config.h"
 
 	#define USART_ECHO	1
-    #define BUFFER_SIZE	100
 
-
-	#define CRLF "\r\n"
-	#define CRLL "\r\n\n"
 	#define CR "\r"
 	#define LF "\n"
+
+	#if LINEFEED == 0
+		#define CRLF "\n"
+		#define CRLL "\n\n"
+	#else
+		#define CRLF "\r\n"
+		#define CRLL "\r\n\n"
+	#endif
+
 	#define ESC_DOWN "\x1b[B"
+	#define KEY_UP 'A'
 
 	volatile unsigned int buffercounter;
 	char usart_rx_buffer[BUFFER_SIZE];

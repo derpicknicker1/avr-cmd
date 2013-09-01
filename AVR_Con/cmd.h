@@ -12,6 +12,10 @@
 	#define BUF_P 			16
 	#define BUF_V 			16
 
+	#define PIN_REG ((volatile uint16_t )&PIND-0x20)
+	#define DDR_REG ((volatile uint16_t )&DDRD-0x20)
+	#define PORT_REG ((volatile uint16_t )&PORTD-0x20)
+
 	#define ERROR 			-1	//	-1 = error
 	#define CONV_D 			0	//	 0 = decimal
 	#define CONV_H 			1	//	 1 = hex

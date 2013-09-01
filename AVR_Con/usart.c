@@ -38,9 +38,8 @@
 volatile unsigned int 	buffercounter = 0,
 						esc_flag1=0,
 						esc_flag2=0,
-						histpos=0,
-						hist_fill=0,
-						hist_chg=0;
+						hist_fill=0;
+volatile int histpos=-1;
 
 char usart_rx_buffer[BUFFER_SIZE];
 char *hist_buffer_pointer[HIST_BUFFER_SIZE];
@@ -201,31 +200,24 @@ ISR (USART_RX)
 	else if((receive_char == KEY_UP) && esc_flag2){ //Detect Arrow-Up ESC-Sequence an drop char
 		esc_flag1=0;
 		esc_flag2=0;
-		if(histpos < hist_fill){
-			if(hist_chg == 1)
-				histpos++;
-			rx_buffer_pointer=hist_buffer_pointer[histpos++];
+		if(histpos < ((int)hist_fill-1)){
+			rx_buffer_pointer=hist_buffer_pointer[++histpos];
 			usart_write(CR"> "ESC_CLRL"%s",rx_buffer_pointer);
 			buffercounter=stringLength(rx_buffer_pointer);
-			hist_chg = 0;
 		}
 		return;
 	}
 	else if((receive_char == KEY_DOWN) && esc_flag2){ //Detect Arrow-Down ESC-Sequence an drop char
 		esc_flag1=0;
 		esc_flag2=0;
-		if(histpos > 0){
-			if(hist_chg == 0)
-				histpos--;
+		if(histpos > -1){
 			rx_buffer_pointer=hist_buffer_pointer[--histpos];
 			usart_write(CR"> "ESC_CLRL"%s",rx_buffer_pointer);
 			buffercounter=stringLength(rx_buffer_pointer);
-			hist_chg = 1;
 		}
 		else{
 			usart_write(CR"> "ESC_CLRL);
 			buffercounter=0;
-			hist_chg = 0;
 		}
 		return;
 	}
@@ -257,7 +249,7 @@ ISR (USART_RX)
 		if (buffercounter){
 			buffercounter--;
 			#if USART_ECHO
-			usart_write_str("\x1b[K");
+			usart_write_str(ESC_CLRL);
 			#endif
 		}
 		return;
@@ -270,7 +262,7 @@ ISR (USART_RX)
 		if (buffercounter){
 			buffercounter--;
 			#if USART_ECHO
-			usart_write_str("\x1b[K");
+			usart_write_str(ESC_CLRL);
 			#endif
 		}
 		return;
@@ -278,9 +270,8 @@ ISR (USART_RX)
 
 	if (receive_char == '\r' && (!(*(rx_buffer_pointer+buffercounter-1) == '\\'))){
 		*(rx_buffer_pointer+buffercounter) = 0;
-		hist_add(my_strcpy(malloc(stringLength(rx_buffer_pointer)*sizeof(char)+1),rx_buffer_pointer));
 		buffercounter = 0;
-		histpos=0;
+		histpos=-1;
 		usart_status.usart_ready = 1;
 		return;
 	}
@@ -289,16 +280,16 @@ ISR (USART_RX)
 		*(rx_buffer_pointer+buffercounter++) = receive_char;
 	else{
 		*(rx_buffer_pointer+buffercounter) = 0;
-		hist_add(my_strcpy(malloc(stringLength(rx_buffer_pointer)*sizeof(char)+1),rx_buffer_pointer));
 		buffercounter = 0;
-		histpos=0;
+		histpos=-1;
 		usart_status.usart_ready = 1;
 	}
 	return;
 }
 
 void hist_add(char *ptr){
-
+	if(hist_fill == HIST_BUFFER_SIZE)
+		free(hist_buffer_pointer[HIST_BUFFER_SIZE-1]);
 	for(int i = (HIST_BUFFER_SIZE-2); i >= 0; i--){
 		hist_buffer_pointer[i+1] = hist_buffer_pointer[i];
 	}

@@ -200,7 +200,6 @@ int8_t executeSet(char* par, uint16_t val){
 		case 'C': PORTC = val; return 1; break;
 		case 'D': 	val &= 0xFC; // protect USART
 					PORTD = val; return 1; break;
-		default: return 0; break;
 		}
 	}
 	else if((par[0] == 'P') && (stringLength(par) == 3)){
@@ -214,23 +213,17 @@ int8_t executeSet(char* par, uint16_t val){
 						(val)?(PORTD |= (1 << (par[2] - 0x30))):(PORTD &= ~(1 << (par[2] - 0x30)));
 						return 1;
 					}
-					else
-						return 0;
 					break;
-				default: return 0; break;
 			}
 		}
-		else
-			return 0;
 	}
-	if((par[0] == 'D') && (stringLength(par) == 2)){
+	else if((par[0] == 'D') && (stringLength(par) == 2)){
 		switch(par[1]){
 		case 'A': DDRA = val; return 1; break;
 		case 'B': DDRB = val; return 1; break;
 		case 'C': DDRC = val; return 1; break;
 		case 'D': 	val &= 0xFC; // protect USART
 					DDRD = val; return 1; break;
-		default: return 0; break;
 		}
 	}
 	else if((par[0] == 'D') && (stringLength(par) == 3)){
@@ -244,111 +237,83 @@ int8_t executeSet(char* par, uint16_t val){
 						(val)?(DDRD |= (1 << (par[2]))):(DDRD &= ~(1 << (par[2])));
 						return 1;
 					}
-					else
-						return 0;
 					break;
-				default: return 0; break;
 			}
 		}
-		else
-			return 0;
 	}
-
-	return 0;
+	return ERROR;
 }
 
-int16_t executeGet(char* par, char* val){
+int16_t executeGet(char* par){
 
-	if((par[0] == 'D') && (par[1] == 'D') && (par[2] == 'R')){
-		if((val[0] == 'P') && (stringLength(val) == 2)){
-			switch(val[1]){
+	if((par[0] == 'D')){
+		if(stringLength(par) == 2){
+			switch(par[1]){
 			case 'A': return DDRA; break;
 			case 'B': return DDRB; break;
 			case 'C': return DDRC; break;
 			case 'D': return (DDRD & 0xFC); break;
-			default: return ERROR; break;
 			}
 		}
-		else if((val[0] == 'P') && (stringLength(par) == 3)){
-			if((val[2] >= 0x30) && (val[2] <= 0x37)){
-				switch(val[1]){
+		else if(stringLength(par) == 3){
+			if((par[2] >= 0x30) && (par[2] <= 0x37)){
+				switch(par[1]){
 					case 'A': return ((DDRA >> (par[2] - 0x30)) & 0x01); break;
 					case 'B': return ((DDRB >> (par[2] - 0x30)) & 0x01); break;
 					case 'C': return ((DDRB >> (par[2] - 0x30)) & 0x01); break;
 					case 'D':
 						if((par[2] - 0x30) > 1) //protect USART
 							return ((DDRD >> (par[2] - 0x30)) & 0x01);
-						else
-							return ERROR;
 						break;
-					default: return ERROR; break;
 				}
 			}
-			else
-				return ERROR;
 		}
-		return ERROR;
 	}
-
-	else if((par[0] == 'P') && (par[1] == 'I') && (par[2] == 'N')){
-		if((val[0] == 'P') && (stringLength(val) == 2)){
-			switch(val[1]){
+	else if(par[0] == 'P'){
+		if(stringLength(par) == 2){
+			switch(par[1]){
 			case 'A': return PINA; break;
 			case 'B': return PINB; break;
 			case 'C': return PINC; break;
 			case 'D': return (PIND & 0xFC); break;
-			default: return ERROR; break;
 			}
 		}
-		else if((val[0] == 'P') && (stringLength(par) == 3)){
-			if((val[2] >= 0x30) && (val[2] <= 0x37)){
-				switch(val[1]){
+		else if(stringLength(par) == 3){
+			if((par[2] >= 0x30) && (par[2] <= 0x37)){
+				switch(par[1]){
 					case 'A': return ((PINA >> (par[2] - 0x30)) & 0x01); break;
 					case 'B': return ((PINB >> (par[2] - 0x30)) & 0x01); break;
 					case 'C': return ((PINB >> (par[2] - 0x30)) & 0x01); break;
 					case 'D':
 						if((par[2] - 0x30) > 1) //protect USART
 							return ((PIND >> (par[2] - 0x30)) & 0x01);
-						else
-							return ERROR;
 						break;
-					default: return ERROR; break;
 				}
 			}
-			else
-				return ERROR;
 		}
-		return ERROR;
 	}
-	else if((par[0] == 'P') && (par[1] == 'O') && (par[2] == 'R') && (par[3] == 'T')){
-		if((val[0] == 'P') && (stringLength(val) == 2)){
-			switch(val[1]){
+	else if(par[0] == 'O'){
+		if(stringLength(par) == 2){
+			switch(par[1]){
 			case 'A': return PORTA; break;
 			case 'B': return PORTB; break;
 			case 'C': return PORTC; break;
 			case 'D': return (PORTD & 0xFC); break;
-			default: return ERROR; break;
 			}
 		}
-		else if((val[0] == 'P') && (stringLength(val) == 3)){
-			if((val[2] >= 0x30) && (val[2] <= 0x37)){
-				switch(val[1]){
-					case 'A': return ((PORTA >> (val[2] - 0x30)) & 0x01); break;
-					case 'B': return ((PORTB >> (val[2] - 0x30)) & 0x01); break;
-					case 'C': return ((PORTB >> (val[2] - 0x30)) & 0x01); break;
+		else if(stringLength(par) == 3){
+			if((par[2] >= 0x30) && (par[2] <= 0x37)){
+				switch(par[1]){
+					case 'A': return ((PORTA >> (par[2] - 0x30)) & 0x01); break;
+					case 'B': return ((PORTB >> (par[2] - 0x30)) & 0x01); break;
+					case 'C': return ((PORTB >> (par[2] - 0x30)) & 0x01); break;
 					case 'D':
 						if((par[2] - 0x30) > 1) //protect USART
-							return ((PORTD >> (val[2]-0x30)) & 0x01);
-						else
-							return ERROR;
+							return ((PORTD >> (par[2]-0x30)) & 0x01);
 						break;
-					default: return ERROR; break;
 				}
 			}
-			else
-				return ERROR;
 		}
-		return ERROR;
 	}
 	return ERROR;
 }
@@ -372,8 +337,8 @@ void parseLine(char* line){
 		if(stringLength(parameter)>0){
 			uint16_t parsedValue = 0;
 			int8_t status = parseValue(value,&parsedValue);
-			if(executeSet(parameter,parsedValue))
-				usart_write("SET | %i: %s = %i"CRLF,status,value,parsedValue);
+			if(executeSet(parameter,parsedValue) > ERROR)
+				usart_write("SET | %i: %s = %i"CRLF,status,parameter,parsedValue);
 			else
 				usart_write("ERR | %i: %s = %i"CRLF,status,parameter,parsedValue);
 		}
@@ -386,8 +351,8 @@ void parseLine(char* line){
 	if(stringCompare(cmd,CMD_GET_STR) == 0){
 		int16_t status = -1;
 		if(stringLength(parameter)>0){
-			if((status = executeGet(parameter,value)) > ERROR)
-				usart_write("%s |  %s = %i"CRLF,parameter,value,status);
+			if((status = executeGet(parameter)) > ERROR)
+				usart_write("GET |  %s = %i"CRLF,parameter,status);
 			else
 				usart_write("ERR |  %s = %i"CRLF,value,status);
 		}
@@ -458,19 +423,15 @@ void parseLine(char* line){
 #endif//USE_SD
 
 //!DEFAULT
-
 	if(cmd[0]){
 		usart_write("ERR | Unknown Command: %s"CRLF,cmd);
 	}
 }
 
-char *my_strcpy(char *destination, char *source)
-{
+char *my_strcpy(char *destination, char *source){
     char *p = destination;
     while (*source != '\0')
-    {
         *p++ = *source++;
-    }
     *p = '\0';
     return destination;
 }

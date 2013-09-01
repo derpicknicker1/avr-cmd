@@ -33,7 +33,7 @@
 	int8_t stringCompare(char* a, char* b);
 	void parseLine(char* line);
 	int8_t executeSet(char* par, uint16_t val);
-	int16_t executeGet(char* par, char* val);
+	int16_t executeGet(char* par);
 	char *my_strcpy(char *destination, char *source);
 
 #endif /* CMD_H_ */

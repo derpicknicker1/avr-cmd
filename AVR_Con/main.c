@@ -57,8 +57,8 @@ int main(void){
 
 		while(!usart_status.usart_ready);
 		usart_write_str(CRLF);
-		parseLine(rx_buffer_pointer);
-		hist_add(my_strcpy(malloc((stringLength(rx_buffer_pointer) + 1)*sizeof(char)),rx_buffer_pointer));
+		parseLine(usart_rx_buffer);
+		hist_add(my_strcpy(malloc((stringLength(usart_rx_buffer) + 1)*sizeof(char)),usart_rx_buffer));
 
 	}
 

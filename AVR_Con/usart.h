@@ -45,7 +45,7 @@
 	#define KEY_UP 'A'
 	#define KEY_DOWN 'B'
 
-	char *rx_buffer_pointer;
+	char usart_rx_buffer[BUFFER_SIZE];
 
 	struct {
 		volatile unsigned char usart_ready:1;

@@ -191,44 +191,53 @@ int8_t stringCompare(char* a, char* b){
 	return 0;
 }
 
+
+//TODO: mask out usart pins???
 int8_t executeSet(char* par, uint16_t val){
-	uint8_t reg=0,offset=4;
+	uint8_t reg = 0, offset = 4;
 
 	if(stringLength(par) > 1){
 		switch(par[0]){
-			case 'D': reg= DDR_REG; break;
-			case 'P': reg= PORT_REG; break;
+			case 'D': reg = DDR_REG; break;
+			case 'P': reg = PORT_REG; break;
 		}
-		offset=3-(par[1]-65);
+		offset = 3 - (par[1] - 65);
 		if((reg > 0) && (offset < 4)){
 			if(stringLength(par) == 3){
-				if((par[2] >= 0x30) && (par[2] <= 0x37))
-					(val)?((_SFR_IO8(reg+(offset*3))) |= (1 << (par[2] - 0x30))):((_SFR_IO8(reg+(offset*3))) &= ~(1 << (par[2] - 0x30)));
+				if((par[2] >= 0x30) && (par[2] <= 0x37)){
+					if(val)
+						(_SFR_IO8(reg + (offset * 3))) |= (1 << (par[2] - 0x30));
+					else
+						(_SFR_IO8(reg + (offset * 3))) &= ~(1 << (par[2] - 0x30));
+					return 1;
+				}
 			}
-			else
-				 _SFR_IO8(reg+(offset*3)) = val;
+			else{
+				 _SFR_IO8(reg + (offset  *3)) = val;
+				 return 1;
+			}
 		}
 	}
 	return ERROR;
 }
 
 int16_t executeGet(char* par){
-	uint8_t reg=0,offset=4;
+	uint8_t reg = 0, offset = 4;
 
 	if(stringLength(par) > 1){
 		switch(par[0]){
-			case 'P': reg= PIN_REG; break;
-			case 'D': reg= DDR_REG; break;
-			case 'O': reg= PORT_REG; break;
+			case 'P': reg = PIN_REG; break;
+			case 'D': reg = DDR_REG; break;
+			case 'O': reg = PORT_REG; break;
 		}
-		offset=3-(par[1]-65);
+		offset = 3 - (par[1] - 65);
 		if((reg > 0) && (offset < 4)){
 			if(stringLength(par) == 3){
 				if((par[2] >= 0x30) && (par[2] <= 0x37))
-					return ((_SFR_IO8(reg+(offset*3))) >> (par[2]-0x30))&0x01;
+					return ((_SFR_IO8(reg + (offset * 3))) >> (par[2] - 0x30)) & 0x01;
 			}
 			else
-				return _SFR_IO8(reg+(offset*3));
+				return _SFR_IO8(reg + (offset * 3));
 		}
 	}
 	return ERROR;
@@ -250,7 +259,7 @@ void parseLine(char* line){
 //SET
 #if CMD_SET == 1
 	if(stringCompare(cmd,CMD_SET_STR) == 0){
-		if(stringLength(parameter)>0){
+		if(stringLength(parameter) > 0){
 			uint16_t parsedValue = 0;
 			int8_t status = parseValue(value,&parsedValue);
 			if(executeSet(parameter,parsedValue) > ERROR)
@@ -266,7 +275,7 @@ void parseLine(char* line){
 #if CMD_SET == 1
 	if(stringCompare(cmd,CMD_GET_STR) == 0){
 		int16_t status = -1;
-		if(stringLength(parameter)>0){
+		if(stringLength(parameter) > 0){
 			if((status = executeGet(parameter)) > ERROR)
 				usart_write("GET |  %s = %i"CRLF,parameter,status);
 			else
@@ -282,28 +291,28 @@ void parseLine(char* line){
 #if CMD_OPEN == 1
 	if(stringCompare(cmd,CMD_OPEN_STR) == 0){
 		uint32_t seek;
-		if(stringLength(parameter)>0){
+		if(stringLength(parameter) > 0){
 			if( MMC_FILE_OPENED == ffopen((uint8_t*)parameter,'r') ){
 				seek = file.length;
 				usart_write("OPEN | %s"CRLL,parameter);
-				char line_buf[40]={0};
-				uint8_t cnt=0;
+				char line_buf[40] = {0};
+				uint8_t cnt = 0;
 				do{
 					do{
 						line_buf[cnt++] = ffread();
-							if(line_buf[cnt-1]=='\r'){
-								line_buf[cnt-1]='\0';
+							if(line_buf[cnt-1] == '\r'){
+								line_buf[cnt-1] = '\0';
 								usart_write("  > %s"CRLF"    ",line_buf);
 								parseLine(line_buf);
 								usart_write(CRLF);
-								cnt=0;
-								line_buf[cnt]='\0';
+								cnt = 0;
+								line_buf[cnt] = '\0';
 								ffread();
 								seek--;
 							}
-					}while(--seek && cnt<40);
-					cnt=0;
-					line_buf[cnt]='\0';
+					}while(--seek && (cnt < 40));
+					cnt = 0;
+					line_buf[cnt] = '\0';
 				}while(seek);
 				ffclose();
 				usart_write_str(CRLF);
@@ -311,7 +320,7 @@ void parseLine(char* line){
 			else
 				usart_write("ERR |  OPEN %s"CRLF,parameter);
 		}
-		cmd[0]='\0';
+		cmd[0] = '\0';
 	}
 #endif
 
@@ -322,18 +331,18 @@ void parseLine(char* line){
 		int8_t status = parseValue(value,&parsedValue);
 		if((parameter[0] == 'M') && (status > ERROR)){
 			usart_write("DELAY |  %sS = %i"CRLF,parameter,parsedValue);
-			for(uint16_t i = 0;i < parsedValue;i++)
+			for(uint16_t i = 0; i < parsedValue; i++)
 				_delay_ms(1);
 
 		}
 		else if((parameter[0] == 'U') && (status > ERROR)){
 			usart_write("DELAY |  %sS = %i"CRLF,parameter,parsedValue);
-			for(uint16_t i = 0;i < parsedValue;i++)
+			for(uint16_t i = 0; i < parsedValue; i++)
 				_delay_us(1);
 		}
 		else
 			usart_write("ERR |  %s = %i"CRLF,value,status);
-		cmd[0]='\0';
+		cmd[0] = '\0';
 	}
 #endif
 #endif//USE_SD

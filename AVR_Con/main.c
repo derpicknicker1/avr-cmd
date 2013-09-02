@@ -53,11 +53,17 @@ int main(void){
 	while(1){
 
 		usart_write("> ");
-		usart_status.usart_ready=0;
 
+		//wait for line input from usart ISR
+		usart_status.usart_ready=0;
 		while(!usart_status.usart_ready);
+
 		usart_write_str(CRLF);
+
+		//parse line (exec cmd)
 		parseLine(usart_rx_buffer);
+
+		//add line to cmd history
 		hist_add(my_strcpy(malloc((stringLength(usart_rx_buffer) + 1)*sizeof(char)),usart_rx_buffer));
 
 	}

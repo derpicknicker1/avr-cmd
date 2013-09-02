@@ -68,8 +68,18 @@ int main(void){
 		hist_add(strCpy(malloc((strLen(usart_rx_buffer) + 1)*sizeof(char)),usart_rx_buffer));
 
 	}
+	
+//        .==.        .==.          
+//       //`^\\      //^`\\         
+//      // ^ ^\(\__/)/^ ^^\\        
+//     //^ ^^ ^/6  6\ ^^ ^ \\       
+//    //^ ^^ ^/( .. )\^ ^ ^ \\      
+//   // ^^ ^/\| v""v |/\^ ^ ^\\     
+//  // ^^/\/ /  `~~`  \ \/\^ ^\\    
+//  -----------------------------
+/// HERE BE DRAGONS
 
 	return 0; //returns 0
-	//HERE BE DRAGONS
+	
 }
 

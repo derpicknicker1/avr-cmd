@@ -300,7 +300,7 @@ static int8_t cmd_print(void){
 					break;
 	//			case 'S': usart_write("DISP | %s = %s"CRLF,val_ptr[1],cmd_vars[((val_ptr[1][1] - 0x30) * 10) + (val_ptr[1][2] - 0x30)]);break;
 				default:
-					usart_write("PRINT | DISP: '%s' wrong base"CRLF,val_ptr[2]);
+					usart_write("PRINT | DISP: '%s' wrong base"CRLF,val_ptr[2]); //ALL YOUR BASE ARE BELONG TO US
 					return ERROR;
 					break;
 			}

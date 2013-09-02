@@ -12,8 +12,8 @@
 	uint8_t AsciiToValue(char word);
 	void toUpper(char* in);
 	void toLower(char* in);
-	uint16_t stringLength(char* a);
-	uint16_t stringCompare(char* a, char* b);
-	char *my_strcpy(char *destination, char *source);
+	uint16_t strLen(char* a);
+	uint16_t strCmp(char* a, char* b);
+	char *strCpy(char *destination, char *source);
 
 #endif /* STRING_H_ */

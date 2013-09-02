@@ -10,6 +10,7 @@
 #include "config.h"
 #include "usart.h"
 #include "cmd.h"
+#include "strings.h"
 
 #if USE_SD == 1
 	#include "sd/mmc_config.h"	// Hier werden alle noetigen Konfigurationen vorgenommen, unbedingt anschauen !
@@ -64,7 +65,7 @@ int main(void){
 		parseLine(usart_rx_buffer);
 
 		//add line to cmd history
-		hist_add(my_strcpy(malloc((stringLength(usart_rx_buffer) + 1)*sizeof(char)),usart_rx_buffer));
+		hist_add(strCpy(malloc((strLen(usart_rx_buffer) + 1)*sizeof(char)),usart_rx_buffer));
 
 	}
 

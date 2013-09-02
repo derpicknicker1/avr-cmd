@@ -25,6 +25,7 @@
 #include "usart.h"
 #include "config.h"
 #include "cmd.h"
+#include "strings.h"
 
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -198,9 +199,9 @@ ISR (USART_RX)
 		esc_flag1 = 0;
 		esc_flag2 = 0;
 		if(histpos < ((int)hist_fill - 1)){
-			my_strcpy(usart_rx_buffer,hist_buffer_pointer[++histpos]);
+			strCpy(usart_rx_buffer,hist_buffer_pointer[++histpos]);
 			usart_write(CR"> "ESC_CLRL"%s",usart_rx_buffer);
-			buffercounter = stringLength(usart_rx_buffer);
+			buffercounter = strLen(usart_rx_buffer);
 		}
 		return;
 	}
@@ -208,9 +209,9 @@ ISR (USART_RX)
 		esc_flag1 = 0;
 		esc_flag2 = 0;
 		if(histpos > 0){
-			my_strcpy(usart_rx_buffer,hist_buffer_pointer[--histpos]);
+			strCpy(usart_rx_buffer,hist_buffer_pointer[--histpos]);
 			usart_write(CR"> "ESC_CLRL"%s",usart_rx_buffer);
-			buffercounter = stringLength(usart_rx_buffer);
+			buffercounter = strLen(usart_rx_buffer);
 		}
 		else if(histpos>-1){
 			usart_write(CR"> "ESC_CLRL);

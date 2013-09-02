@@ -42,7 +42,7 @@ void toLower(char* in){
 	}while(*in++);
 }
 
-uint16_t stringLength(char* a){
+uint16_t strLen(char* a){
 	uint8_t i = 0;
 	while(a[i] != '\0'){
 		i++;
@@ -50,9 +50,9 @@ uint16_t stringLength(char* a){
 	return i;
 }
 
-uint16_t stringCompare(char* a, char* b){
+uint16_t strCmp(char* a, char* b){
 	uint8_t i = 0;
-	if(stringLength(b) > stringLength(a))
+	if(strLen(b) > strLen(a))
 		return -1;
 	while(a[i] != '\0'){
 		if(a[i] != b[i]){
@@ -63,7 +63,7 @@ uint16_t stringCompare(char* a, char* b){
 	return 0;
 }
 
-char *my_strcpy(char *destination, char *source){
+char *strCpy(char *destination, char *source){
     char *p = destination;
     while (*source != '\0')
         *p++ = *source++;

@@ -26,22 +26,18 @@
 FILE mystdout = FDEV_SETUP_STREAM(uart_putc, NULL, _FDEV_SETUP_WRITE);
 
 int main(void){
-	DDRA=0xFF;
-	DDRB=0xFF;
-	DDRC=0xFF;
-	DDRD=0xFF;
-	PORTA=0x00;
-	PORTB=0x00;
-	PORTC=0x00;
-	PORTD=0x00;
+	DDRA=DDRB=DDRC=DDRD=0xFF;
+	PORTA=PORTB=PORTC=PORTD=0x00;
+
 	uart_init(9600);
 	stdout = &mystdout;
 	sei();
 
 	printf(ESC_CLS""ESC_GREEN""ESC_BOLD"AVR-Con alpha 0.1"CRLF""ESC_CLEAR);
 
-	file_args_init();
+
 #if USE_SD == 1
+	file_args_init();
 	printf("Boot SD");
 
 	if( FALSE == mmc_init() ){
@@ -74,11 +70,6 @@ int main(void){
 			usart_status.usart_ready=0;
 
 		}
-
-
-
-
-
 
 	}
 	

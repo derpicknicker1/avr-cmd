@@ -20,22 +20,35 @@
 
 	static int8_t cmd_open(void);
 	static int8_t cmd_delay(void);
+
+	char* file_arg_ptr[ARG_BUF] = {0};
 #endif
 
 static void get_arg_from_line(uint8_t position, char* line, char* output);
 static int8_t parse_value(char* value, uint16_t* out);
 static int8_t cmd_set(void);
 static int8_t cmd_print(void);
+static int8_t cmd_math(void);
+static void uint_to_bin(char* out, uint16_t value);
 
 uint16_t public_vars[VAR_BUF] = {0};
 char* arg_ptr[ARG_BUF] = {0};
-char* file_arg_ptr[ARG_BUF] = {0};
 
 
 COMMAND_STRUCTUR COMMAND_TABELLE[] = // Befehls-Tabelle
 {
 	{"set",cmd_set},
 	{"print",cmd_print},
+	{"add",cmd_math},
+	{"sub",cmd_math},
+	{"mul",cmd_math},
+	{"div",cmd_math},
+	{"mod",cmd_math},
+	{"shl",cmd_math},
+	{"shr",cmd_math},
+	{"and",cmd_math},
+	{"or",cmd_math},
+	{"xor",cmd_math},
 //SD Functions
 #if USE_SD == 1
 		{"open",cmd_open},
@@ -175,6 +188,7 @@ static int8_t parse_value(char* value, uint16_t* out){
 				status = CONV_VA;
 			}
 		}
+#if USE_SD == 1
 		else if(strlen(value) > 1 && value[0] == '@'){
 			val = (uint16_t)strtoul(value + 1,&ptr,10);
 			if(*ptr == '\0' && (val + 2) < ARG_BUF){
@@ -182,6 +196,7 @@ static int8_t parse_value(char* value, uint16_t* out){
 					status = CONV_ARG;
 			}
 		}
+#endif
 	}
 // DECIMAL
 	else{
@@ -281,10 +296,12 @@ static int8_t cmd_print(void){
 		}
 
 	}
+#if USE_SD == 1
 	else if((arg_ptr[1][0] == '@') && (strlen(arg_ptr[1]) >1) && (parse_value((arg_ptr[1] + 1),&tmp) > ERROR)){
 			printf(ESC_YELLOW"%s"ESC_YELLOW""CRLF,file_arg_ptr[tmp+2]);
 			ret=1;
 	}
+#endif
 	else if(strlen(arg_ptr[1]) > 0){
 		printf(ESC_YELLOW"%s"ESC_YELLOW""CRLF,arg_ptr[1]);
 		ret=1;
@@ -359,14 +376,68 @@ static int8_t cmd_delay(void){
 	printf(ESC_RED"ERR |  %s = %i"ESC_CLEAR,arg_ptr[2],status);
 	return ERROR;
 }
-#endif
 
 
 void file_args_init(void){
 	for(uint16_t i = 0; i < ARG_BUF; i++){
 		free(file_arg_ptr[i]);
-		file_arg_ptr[i]=strcpy(malloc(sizeof(char) ), "");
+		file_arg_ptr[i]=strcpy(malloc(sizeof(char)), "");
 	}
+}
+
+#endif
+
+
+static int8_t cmd_math(void){
+	uint16_t tmp1,tmp2,tmp3;
+	char* c = "";
+	if((parse_value(arg_ptr[1],&tmp1) > ERROR) && (parse_value(arg_ptr[2],&tmp2) > ERROR)
+			&& (arg_ptr[1][0] == '$') && (parse_value(arg_ptr[1]+1,&tmp3) > ERROR)){
+
+		switch(arg_ptr[0][0]){
+			case 'a' :
+				if(arg_ptr[1][1] == 'd'){
+					public_vars[tmp3] = tmp1 + tmp2;
+					c = "+";
+				}
+				else{
+					public_vars[tmp3] = tmp1 & tmp2;
+					c = "&";
+				}
+				break;
+			case 's' :
+				if(arg_ptr[1][2] == 'l'){
+					public_vars[tmp3] = tmp1 << tmp2;
+					c = "<<";
+				}
+				else if(arg_ptr[1][2] == 'r'){
+					public_vars[tmp3] = tmp1 >> tmp2;
+					c = ">>";
+				}
+				else{
+					public_vars[tmp3] = tmp1 - tmp2;
+					c = "-";
+				}
+				break;
+			case 'm' :
+				if(arg_ptr[0][1] == 'u'){
+					public_vars[tmp3] = tmp1 * tmp2;
+					 c = "*";
+				}
+				else{
+					public_vars[tmp3] = tmp1 % tmp2;
+					 c = "%";
+				}
+				break;
+			case 'd' : public_vars[tmp3] = tmp1 / tmp2; c = "/"; break;
+			case 'o' : public_vars[tmp3] = tmp1 | tmp2; c = "|"; break;
+			case 'x' : public_vars[tmp3] = tmp1 ^ tmp2; c = "^"; break;
+		}
+		printf(ESC_YELLOW"%s |  %s %s %s = %i"ESC_CLEAR,strupr(arg_ptr[0]),arg_ptr[1],c,arg_ptr[2],public_vars[tmp3]);
+		return 1;
+	}
+	printf(ESC_RED"ERR |  %s %s %s"ESC_CLEAR,arg_ptr[1],arg_ptr[0],arg_ptr[2]);
+	return ERROR;
 }
 
 void uint_to_bin(char* out, uint16_t value){

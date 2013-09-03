@@ -8,11 +8,11 @@
 #ifndef CMD_H_
 	#define CMD_H_
 
-//	#define ADD(x,y)		(x+=y)
-//	#define SUB(x,y)		(x-=y)
-//	#define MUL(x,y)		(x*=y)
-//	#define MOD(x,y)		(x%=y)
-//	#define DIV(x,y)		(x/=y)
+	#define ADD(x,y)		(x+=y)
+	#define SUB(x,y)		(x-=y)
+	#define MUL(x,y)		(x*=y)
+	#define MOD(x,y)		(x%=y)
+	#define DIV(x,y)		(x/=y)
 
 	#define PIN_REG (0x00)
 	#define DDR_REG (0x01)
@@ -37,7 +37,9 @@ enum{
 	} COMMAND_STRUCTUR;
 
 	void parse_line(char* line);
-	void file_args_init(void);
-	void uint_to_bin(char* out, uint16_t value);
+
+	#if USE_SD ==1
+		void file_args_init(void);
+	#endif
 
 #endif /* CMD_H_ */

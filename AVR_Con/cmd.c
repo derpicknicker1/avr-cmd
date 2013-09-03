@@ -22,7 +22,7 @@
 	static int8_t cmd_delay(void);
 #endif
 
-static void get_group_from_line(uint8_t position, char* line, char* output);
+static void get_arg_from_line(uint8_t position, char* line, char* output);
 static int8_t parse_value(char* value, uint16_t* out);
 static int8_t cmd_set(void);
 static int8_t cmd_print(void);
@@ -51,12 +51,12 @@ void parse_line(char* line){
 	uint8_t i = 0;
 
 	//get groups of instructions -> stored in val_ptr[]
-	get_group_from_line(0,line,gr_buf);
+	get_arg_from_line(0,line,gr_buf);
 	while(strlen(gr_buf) > 0 && i < ARG_BUF){
 		free(arg_ptr[i]);
 		arg_ptr[i] = strcpy(malloc((strlen(gr_buf) + 1) * sizeof(char)),gr_buf);
 		i++;
-		get_group_from_line(i,line,gr_buf);
+		get_arg_from_line(i,line,gr_buf);
 	}
 
 	//search command
@@ -80,7 +80,7 @@ void parse_line(char* line){
 }
 
 
-static void get_group_from_line(uint8_t position, char* line, char* output){
+static void get_arg_from_line(uint8_t position, char* line, char* output){
 	uint8_t spaces = 0, i = 0, strflag = 0;
 	while(line[i] != '\0' && position >= spaces){
 
@@ -168,16 +168,16 @@ static int8_t parse_value(char* value, uint16_t* out){
 				status = CONV_REG;
 			}
 		}
-		else if(strlen(value) > 2 && value[0] == '$'){
+		else if(strlen(value) > 1 && value[0] == '$'){
 			val = strtoul(value + 1,&ptr,10);
 			if(*ptr == '\0' && val < VAR_BUF){
 				val = public_vars[val];
 				status = CONV_VA;
 			}
 		}
-		else if(strlen(value) > 2 && value[0] == '@'){
-			val = strtoul(value + 1,&ptr,10);
-			if(*ptr == '\0' && (val + 2) < VAR_BUF){
+		else if(strlen(value) > 1 && value[0] == '@'){
+			val = (uint16_t)strtoul(value + 1,&ptr,10);
+			if(*ptr == '\0' && (val + 2) < ARG_BUF){
 				if(parse_value(file_arg_ptr[val + 2],&val) > ERROR)
 					status = CONV_ARG;
 			}
@@ -220,21 +220,21 @@ static int8_t cmd_set(void){
 						else
 						(_SFR_IO8(reg + (offset * 3))) &= ~(1 << tmp);
 
-						printf("SET | %s = %i",arg_ptr[1],val);
+						printf("SET | %s = %u",arg_ptr[1],val);
 						ret = 1;
 					}
 				}
 				else{
 					_SFR_IO8(reg + (offset  *3)) = val;
-					printf("SET | %s = %i",arg_ptr[1],val);
+					printf("SET | %s = %u",arg_ptr[1],val);
 					ret = 1;
 				}
 			}
-			else if(strlen(arg_ptr[1]) > 2 && arg_ptr[1][0] == '$'){
+			else if(strlen(arg_ptr[1]) > 1 && arg_ptr[1][0] == '$'){
 				tmp = strtoul(arg_ptr[1] + 1,&ptr,10);
 				if(*ptr == '\0' && tmp < VAR_BUF){
 					public_vars[tmp]=val;
-					printf("SET | %s = %i",arg_ptr[1],val);
+					printf("SET | %s = %u",arg_ptr[1],val);
 					ret = 1;
 				}
 			}
@@ -254,7 +254,7 @@ static int8_t cmd_print(void){
 		printf(ESC_YELLOW);
 		switch(arg_ptr[2][0]){
 			case 'i':
-				printf("PRINT | %s = %i",arg_ptr[1],tmp);
+				printf("PRINT | %s = %u",arg_ptr[1],tmp);
 				ret = 1;
 				break;
 			case 'x':
@@ -281,7 +281,7 @@ static int8_t cmd_print(void){
 		}
 
 	}
-	else if((arg_ptr[1][0] == '@') && (strlen(arg_ptr[1]) == 3) && (parse_value((arg_ptr[1] + 1),&tmp) > ERROR)){
+	else if((arg_ptr[1][0] == '@') && (strlen(arg_ptr[1]) >1) && (parse_value((arg_ptr[1] + 1),&tmp) > ERROR)){
 			printf(ESC_YELLOW"%s"ESC_YELLOW""CRLF,file_arg_ptr[tmp+2]);
 			ret=1;
 	}
@@ -344,14 +344,14 @@ static int8_t cmd_delay(void){
 	uint16_t parsedval = 0;
 	int8_t status = parse_value(arg_ptr[2],&parsedval);
 	if((arg_ptr[1][0] == 'm') && (status > ERROR)){
-		printf(ESC_YELLOW"DELAY |  %sS = %i"ESC_CLEAR,arg_ptr[1],parsedval);
+		printf(ESC_YELLOW"DELAY |  %sS = %u"ESC_CLEAR,arg_ptr[1],parsedval);
 		for(uint16_t i = 0; i < parsedval; i++)
 			_delay_ms(1);
 		return 1;
 
 	}
 	else if((arg_ptr[1][0] == 'u') && (status > ERROR)){
-		printf(ESC_YELLOW"DELAY |  %sS = %i"ESC_CLEAR,arg_ptr[1],parsedval);
+		printf(ESC_YELLOW"DELAY |  %sS = %u"ESC_CLEAR,arg_ptr[1],parsedval);
 		for(uint16_t i = 0; i < parsedval; i++)
 			_delay_us(1);
 		return 1;

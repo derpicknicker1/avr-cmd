@@ -10,7 +10,7 @@
 #include "config.h"
 #include "usart.h"
 #include "cmd.h"
-#include "strings.h"
+#include "string.h"
 
 #if USE_SD == 1
 	#include "sd/mmc_config.h"	// Hier werden alle noetigen Konfigurationen vorgenommen, unbedingt anschauen !
@@ -52,6 +52,12 @@ int main(void){
 	usart_write_str("OK"CRLL);
 
 	while(1){
+//		char* ptr;
+//		uint16_t val = strtoul("123",&ptr,10);
+//		if(*ptr=='\0')
+//			usart_write("JoJo %i"CRLF,val);
+//		else
+//			usart_write("NONO"CRLF);
 
 		usart_write("> ");
 
@@ -62,22 +68,22 @@ int main(void){
 		usart_write_str(CRLF);
 
 		//parse line (exec cmd)
-		parseLine(usart_rx_buffer);
+		parse_line(usart_rx_buffer);
 
 		//add line to cmd history
-		hist_add(strCpy(malloc((strLen(usart_rx_buffer) + 1)*sizeof(char)),usart_rx_buffer));
+		hist_add(strcpy(malloc((strlen(usart_rx_buffer) + 1)*sizeof(char)),usart_rx_buffer));
 
 	}
 	
-//        .==.        .==.          
-//       //`^\\      //^`\\         
-//      // ^ ^\(\__/)/^ ^^\\        
-//     //^ ^^ ^/6  6\ ^^ ^ \\       
-//    //^ ^^ ^/( .. )\^ ^ ^ \\      
-//   // ^^ ^/\| v""v |/\^ ^ ^\\     
-//  // ^^/\/ /  `~~`  \ \/\^ ^\\    
-//  -----------------------------
-/// HERE BE DRAGONS
+	/*        .==.        .==.
+	//       //`^\\      //^`\\
+	//      // ^ ^\(\__/)/^ ^^\\
+	//     //^ ^^ ^/6  6\ ^^ ^ \\
+	//    //^ ^^ ^/( .. )\^ ^ ^ \\
+	//   // ^^ ^/\| v""v |/\^ ^ ^\\
+	//  // ^^/\/ /  `~~`  \ \/\^ ^\\
+	//  -----------------------------
+	/// HERE BE DRAGONS */
 
 	return 0; //returns 0
 	

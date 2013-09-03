@@ -81,17 +81,32 @@ void parse_line(char* line){
 
 
 static void get_group_from_line(uint8_t position, char* line, char* output){
-	uint8_t spaces = 0;
-	uint8_t i = 0;
-	while(line[i] != '\0'){
-		if(line[i] == ' '){
+	uint8_t spaces = 0, i = 0, strflag = 0;
+	while(line[i] != '\0' && position >= spaces){
+
+		if(line[i] == ' ' && !strflag){
 			spaces++;
 			while(line[++i] == ' ');
+			if(line[i] == '"'){
+				i++;
+				strflag = 1;
+			}
+
 		}
+
 		if(position == spaces){
-			*output++ = line[i];
+			if(line[i] == '"' && strflag){
+				if(line[i-1] == '\\')
+					*(output-1) = '"';
+				else
+					strflag = 0;
+			}
+			else
+				*output++ = line[i];
 		}
+
 		i++;
+
 	}
 	*output = '\0';
 }
@@ -257,8 +272,12 @@ static int8_t cmd_print(void){
 			}
 		}
 	}
+	else if(strlen(val_ptr[1]) > 0){
+		printf(ESC_YELLOW"%s"ESC_YELLOW""CRLF,val_ptr[1]);
+		ret=1;
+	}
 	if(!(ret > ERROR))
-		printf(ESC_RED"ERR |  PRINT: %s not found",val_ptr[1]);
+		printf(ESC_RED"ERR |  PRINT: no value");
 	printf(ESC_CLEAR);
 	return ret;
 }

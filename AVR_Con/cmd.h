@@ -33,6 +33,6 @@
 		int8_t(*fp)(void);  	// function pointer
 	} COMMAND_STRUCTUR;
 
-	void parseLine(char* line);
+	void parse_line(char* line);
 
 #endif /* CMD_H_ */

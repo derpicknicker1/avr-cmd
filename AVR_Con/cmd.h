@@ -38,5 +38,6 @@ enum{
 
 	void parse_line(char* line);
 	void file_args_init(void);
+	void uint_to_bin(char* out, uint16_t value);
 
 #endif /* CMD_H_ */

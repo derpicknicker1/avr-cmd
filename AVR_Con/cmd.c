@@ -241,7 +241,7 @@ static int8_t cmd_set(void){
 		}
 	}
 	if(!(ret > ERROR))
-		printf("ERR | %s = %s",arg_ptr[1],arg_ptr[2]);
+		printf(ESC_RED"ERR | %s = %s",arg_ptr[1],arg_ptr[2]);
 	printf(ESC_CLEAR);
 	return ERROR;
 }
@@ -265,10 +265,13 @@ static int8_t cmd_print(void){
 				printf("PRINT | %s = 0o%o",arg_ptr[1],tmp);
 				ret = 1;
 				break;
-			case 'b':
-				printf("PRINT | %s = 0b%d",arg_ptr[1],tmp);
+			case 'b':{
+				char illuminati_out[23];
+				uint_to_bin(illuminati_out,tmp);
+				printf("PRINT | %s = %s",arg_ptr[1],illuminati_out);
 				ret = 1;
 				break;
+			}
 //			case 'S': printf("DISP | %s = %s"CRLF,arg_ptr[1],tmp;break;
 			default:
 				 //ALL YOUR BASE ARE BELONG TO US
@@ -364,4 +367,26 @@ void file_args_init(void){
 		free(file_arg_ptr[i]);
 		file_arg_ptr[i]=strcpy(malloc(sizeof(char) ), "");
 	}
+}
+
+void uint_to_bin(char* out, uint16_t value){
+	uint8_t i = 0;
+	char* h = out;
+	uint8_t m = 12;
+	if(value > 0xF)
+		m = 8;
+	if(value > 0xFF)
+		m = 4;
+	if(value > 0xFFF)
+		m = 0;
+	*h++ = '0';
+	*h++ = 'b';
+	do{
+		if(i>0 && !(i%4))
+			*h++ = '.';
+
+		uint8_t t = ((value << ((i++*1)+m)) & 0x8000) >> 15;
+		*h++ = t + 0x30;
+	}while(i<(16-m));
+	*h = '\0';
 }

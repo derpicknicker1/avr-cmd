@@ -64,7 +64,7 @@ void parse_line(char* line){
 	while(strcmp(COMMAND_TABELLE[i].cmd,val_ptr[0])){
 		//if CMD not found
 		if (COMMAND_TABELLE[++i].cmd == 0) {
-			printf("ERR | Unknown Command: %s",val_ptr[0]);
+			printf(ESC_RED"ERR | Unknown Command: %s"ESC_CLEAR,val_ptr[0]);
 			return;
 		}
 	}
@@ -187,6 +187,9 @@ static int8_t cmd_set(void){
 				case 'p': reg = PORT_REG; break;
 			}
 			offset = 3 - (val_ptr[1][1] - 97);
+
+			printf(ESC_YELLOW);
+
 			if((reg > 0) && (offset < 4)){
 				if(strlen(val_ptr[1]) == 3){
 					tmp = strtoul(val_ptr[1] + 2,&ptr,10);
@@ -218,6 +221,7 @@ static int8_t cmd_set(void){
 	}
 	if(!(ret > ERROR))
 		printf("ERR | %s = %s",val_ptr[1],val_ptr[2]);
+	printf(ESC_CLEAR);
 	return ERROR;
 }
 
@@ -226,6 +230,7 @@ static int8_t cmd_print(void){
 	if((val_ptr[1][0] == '$') && (strlen(val_ptr[1])>2) && (strlen(val_ptr[2])>0)){
 		uint16_t tmp;
 		if(parse_value(val_ptr[1],&tmp) > ERROR){
+			printf(ESC_YELLOW);
 			switch(val_ptr[2][0]){
 				case 'i':
 					printf("PRINT | %s = %i",val_ptr[1],tmp);
@@ -246,14 +251,15 @@ static int8_t cmd_print(void){
 	//			case 'S': printf("DISP | %s = %s"CRLF,val_ptr[1],tmp;break;
 				default:
 					 //ALL YOUR BASE ARE BELONG TO US
-					printf("PRINT | DISP: '%s' wrong base",val_ptr[2]);
+					printf(ESC_RED"PRINT | DISP: '%s' wrong base",val_ptr[2]);
 					ret = ERROR;
 					break;
 			}
 		}
 	}
 	if(!(ret > ERROR))
-		printf("ERR |  PRINT: %s not found",val_ptr[1]);
+		printf(ESC_RED"ERR |  PRINT: %s not found",val_ptr[1]);
+	printf(ESC_CLEAR);
 	return ret;
 }
 
@@ -266,7 +272,7 @@ static int8_t cmd_open(void){
 	if(strlen(val_ptr[1]) > 0){
 		if( MMC_FILE_OPENED == ffopen((uint8_t*)val_ptr[1],'r') ){
 			seek = file.length;
-			printf("OPEN | %s"CRLL,val_ptr[1]);
+			printf(ESC_YELLOW"OPEN | %s"ESC_CLEAR""CRLL,val_ptr[1]);
 			char line_buf[BUFFER_SIZE] = {0};
 			uint8_t cnt = 0;
 			do{
@@ -274,7 +280,7 @@ static int8_t cmd_open(void){
 					line_buf[cnt++] = ffread();
 						if(line_buf[cnt-1] == '\r'){
 							line_buf[cnt-1] = '\0';
-							printf("  > %s"CRLF"    ",line_buf);
+							printf(ESC_CYAN"  > %s"CRLF"    ",line_buf);
 							parse_line(line_buf);
 							printf(CRLF);
 							cnt = 0;
@@ -287,10 +293,11 @@ static int8_t cmd_open(void){
 				line_buf[cnt] = '\0';
 			}while(seek);
 			ffclose();
+			printf(ESC_CLEAR);
 			return 1;
 		}
 	}
-	printf("ERR |  OPEN %s",val_ptr[1]);
+	printf(ESC_RED"ERR |  OPEN %s"ESC_CLEAR,val_ptr[1]);
 	return ERROR;
 }
 
@@ -299,19 +306,19 @@ static int8_t cmd_delay(void){
 	uint16_t parsedval = 0;
 	int8_t status = parse_value(val_ptr[2],&parsedval);
 	if((val_ptr[1][0] == 'm') && (status > ERROR)){
-		printf("DELAY |  %sS = %i",val_ptr[1],parsedval);
+		printf(ESC_YELLOW"DELAY |  %sS = %i"ESC_CLEAR,val_ptr[1],parsedval);
 		for(uint16_t i = 0; i < parsedval; i++)
 			_delay_ms(1);
 		return 1;
 
 	}
 	else if((val_ptr[1][0] == 'u') && (status > ERROR)){
-		printf("DELAY |  %sS = %i",val_ptr[1],parsedval);
+		printf(ESC_YELLOW"DELAY |  %sS = %i"ESC_CLEAR,val_ptr[1],parsedval);
 		for(uint16_t i = 0; i < parsedval; i++)
 			_delay_us(1);
 		return 1;
 	}
-	printf("ERR |  %s = %i",val_ptr[2],status);
+	printf(ESC_RED"ERR |  %s = %i"ESC_CLEAR,val_ptr[2],status);
 	return ERROR;
 }
 #endif

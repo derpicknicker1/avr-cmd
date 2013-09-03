@@ -43,8 +43,19 @@
 
 	#define ESC_DOWN "\x1b[B"
 	#define ESC_CLRL "\x1b[K"
+	#define ESC_CLS "\x1b[2J\x1b[H"
 	#define KEY_UP 'A'
 	#define KEY_DOWN 'B'
+	#define ESC_CLEAR    "\e[0m"
+	#define ESC_BOLD     "\e[1m"
+	#define ESC_BLACK    "\e[30m"
+	#define ESC_RED      "\e[31m"
+	#define ESC_GREEN    "\e[32m"
+	#define ESC_YELLOW   "\e[33m"
+	#define ESC_BLUE     "\e[34m"
+	#define ESC_MAGENTA  "\e[35m"
+	#define ESC_CYAN     "\e[36m"
+	#define ESC_WHITE    "\e[37m"
 
 	char usart_rx_buffer[BUFFER_SIZE];
 

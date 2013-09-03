@@ -35,25 +35,26 @@ int main(void){
 	usart_init(9600);
 	stdout = &mystdout;
 	sei();
-	printf(CRLL"AVR-Con alpha 0.1"CRLF);
+
+	printf(ESC_CLS""ESC_GREEN""ESC_BOLD"AVR-Con alpha 0.1"CRLF""ESC_CLEAR);
 
 #if USE_SD == 1
 	printf("Boot SD");
 
 	if( FALSE == mmc_init() ){
-		printf(CRLF"ERR | MMC-Init: System halted");
+		printf(CRLF""ESC_RED"ERR | MMC-Init: System halted"ESC_CLEAR);
 		return 0;
 	}
 
 	printf("...");
 
 	if( FALSE == fat_loadFatData() ){
-		printf(CRLF"ERR | FAT-Init: System halted");
+		printf(CRLF""ESC_RED"ERR | FAT-Init: System halted"ESC_CLEAR);
 		return 0;
 	}
 #endif
 
-	printf("OK"CRLL"> ");
+	printf(ESC_GREEN"OK"ESC_CLEAR""CRLL"> ");
 	while(1){
 
 		if(usart_status.usart_ready==1){

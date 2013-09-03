@@ -18,14 +18,16 @@
 	#define DDR_REG ((volatile uint16_t )&DDRD-0x20)
 	#define PORT_REG ((volatile uint16_t )&PORTD-0x20)
 
-	#define ERROR 			-1	//	-1 = error
-	#define CONV_D 			0	//	 0 = decimal
-	#define CONV_H 			1	//	 1 = hex
-	#define CONV_B 			2	//	 2 = binary
-	#define CONV_O 			3	// 	 3 = octal
-	#define CONV_SW 		4	//	 4 = on/off/in/out
-	#define CONV_REG 		5	//	 5 = Register
-	#define CONV_VA 		6	//	 6 = Var
+enum{
+	ERROR 	= -1,	//	-1 = error
+	CONV_D 	=  0,	//	 0 = decimal
+	CONV_H 	=  1,	//	 1 = hex
+	CONV_B 	=  2,	//	 2 = binary
+	CONV_O 	=  3,	// 	 3 = octal
+	CONV_SW =  4,	//	 4 = on/off/in/out
+	CONV_REG=  5,	//	 5 = Register
+	CONV_VA =  6	//	 6 = Var
+};
 
 	typedef struct
 	{

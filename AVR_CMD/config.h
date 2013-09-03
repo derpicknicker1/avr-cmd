@@ -12,7 +12,7 @@
 		// CMD_OPEN and CMD_DELAY are excluded also
 		// they are only needed when working with SD_Card
 		// see below at CMD select section
-	#define USE_SD 1
+	#define USE_SD 0
 
 	// USART RX Buffer (Line-Buffer) Size in Bytes (=Chars)
 	#define BUFFER_SIZE	100 //max. 255?

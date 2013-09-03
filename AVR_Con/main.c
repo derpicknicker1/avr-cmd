@@ -53,23 +53,28 @@ int main(void){
 	}
 #endif
 
-	printf("OK"CRLL);
-
+	printf("OK"CRLL"> ");
 	while(1){
 
-		printf("> ");
+		if(usart_status.usart_ready==1){
+			printf(CRLF);
 
-		//wait for line input from usart ISR
-		usart_status.usart_ready=0;
-		while(!usart_status.usart_ready);
+			//parse line (exec cmd)
+			parse_line(usart_rx_buffer);
 
-		printf(CRLF);
+			//add line to cmd history
+			hist_add(strcpy(malloc((strlen(usart_rx_buffer) + 1)*sizeof(char)),usart_rx_buffer));
 
-		//parse line (exec cmd)
-		parse_line(usart_rx_buffer);
+			//get ready for next line
+			printf(CRLF"> ");
+			usart_status.usart_ready=0;
 
-		//add line to cmd history
-		hist_add(strcpy(malloc((strlen(usart_rx_buffer) + 1)*sizeof(char)),usart_rx_buffer));
+		}
+
+
+
+
+
 
 	}
 	

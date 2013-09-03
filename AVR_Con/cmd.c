@@ -64,7 +64,7 @@ void parse_line(char* line){
 	while(strcmp(COMMAND_TABELLE[i].cmd,val_ptr[0])){
 		//if CMD not found
 		if (COMMAND_TABELLE[++i].cmd == 0) {
-			printf("ERR | Unknown Command: %s"CRLF,val_ptr[0]);
+			printf("ERR | Unknown Command: %s",val_ptr[0]);
 			return;
 		}
 	}
@@ -196,13 +196,13 @@ static int8_t cmd_set(void){
 						else
 						(_SFR_IO8(reg + (offset * 3))) &= ~(1 << tmp);
 
-						printf("SET | %s = %i"CRLF,val_ptr[1],val);
+						printf("SET | %s = %i",val_ptr[1],val);
 						ret = 1;
 					}
 				}
 				else{
 					_SFR_IO8(reg + (offset  *3)) = val;
-					printf("SET | %s = %i"CRLF,val_ptr[1],val);
+					printf("SET | %s = %i",val_ptr[1],val);
 					ret = 1;
 				}
 			}
@@ -210,14 +210,14 @@ static int8_t cmd_set(void){
 				tmp = strtoul(val_ptr[1] + 1,&ptr,10);
 				if(*ptr == '\0' && tmp < VAR_BUF){
 					cmd_vars[tmp]=val;
-					printf("SET | %s = %i"CRLF,val_ptr[1],val);
+					printf("SET | %s = %i",val_ptr[1],val);
 					ret = 1;
 				}
 			}
 		}
 	}
 	if(!(ret > ERROR))
-		printf("ERR | %s = %s"CRLF,val_ptr[1],val_ptr[2]);
+		printf("ERR | %s = %s",val_ptr[1],val_ptr[2]);
 	return ERROR;
 }
 
@@ -228,32 +228,32 @@ static int8_t cmd_print(void){
 		if(parse_value(val_ptr[1],&tmp) > ERROR){
 			switch(val_ptr[2][0]){
 				case 'i':
-					printf("PRINT | %s = %i"CRLF,val_ptr[1],tmp);
+					printf("PRINT | %s = %i",val_ptr[1],tmp);
 					ret = 1;
 					break;
 				case 'x':
-					printf("PRINT | %s = 0x%x"CRLF,val_ptr[1],tmp);
+					printf("PRINT | %s = 0x%x",val_ptr[1],tmp);
 					ret = 1;
 					break;
 				case 'o':
-					printf("PRINT | %s = 0o%o"CRLF,val_ptr[1],tmp);
+					printf("PRINT | %s = 0o%o",val_ptr[1],tmp);
 					ret = 1;
 					break;
 				case 'b':
-					printf("PRINT | %s = 0b%d"CRLF,val_ptr[1],tmp);
+					printf("PRINT | %s = 0b%d",val_ptr[1],tmp);
 					ret = 1;
 					break;
 	//			case 'S': printf("DISP | %s = %s"CRLF,val_ptr[1],tmp;break;
 				default:
 					 //ALL YOUR BASE ARE BELONG TO US
-					printf("PRINT | DISP: '%s' wrong base"CRLF,val_ptr[2]);
+					printf("PRINT | DISP: '%s' wrong base",val_ptr[2]);
 					ret = ERROR;
 					break;
 			}
 		}
 	}
 	if(!(ret > ERROR))
-		printf("ERR |  PRINT: %s not found"CRLF,val_ptr[1]);
+		printf("ERR |  PRINT: %s not found",val_ptr[1]);
 	return ret;
 }
 
@@ -287,11 +287,10 @@ static int8_t cmd_open(void){
 				line_buf[cnt] = '\0';
 			}while(seek);
 			ffclose();
-			printf(CRLF);
 			return 1;
 		}
 	}
-	printf("ERR |  OPEN %s"CRLF,val_ptr[1]);
+	printf("ERR |  OPEN %s",val_ptr[1]);
 	return ERROR;
 }
 
@@ -300,19 +299,19 @@ static int8_t cmd_delay(void){
 	uint16_t parsedval = 0;
 	int8_t status = parse_value(val_ptr[2],&parsedval);
 	if((val_ptr[1][0] == 'm') && (status > ERROR)){
-		printf("DELAY |  %sS = %i"CRLF,val_ptr[1],parsedval);
+		printf("DELAY |  %sS = %i",val_ptr[1],parsedval);
 		for(uint16_t i = 0; i < parsedval; i++)
 			_delay_ms(1);
 		return 1;
 
 	}
 	else if((val_ptr[1][0] == 'u') && (status > ERROR)){
-		printf("DELAY |  %sS = %i"CRLF,val_ptr[1],parsedval);
+		printf("DELAY |  %sS = %i",val_ptr[1],parsedval);
 		for(uint16_t i = 0; i < parsedval; i++)
 			_delay_us(1);
 		return 1;
 	}
-	printf("ERR |  %s = %i"CRLF,val_ptr[2],status);
+	printf("ERR |  %s = %i",val_ptr[2],status);
 	return ERROR;
 }
 #endif

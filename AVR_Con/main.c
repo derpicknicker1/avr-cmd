@@ -7,6 +7,8 @@
 
 #include <avr/interrupt.h>
 #include <stdlib.h>
+//#include <stddef.h>
+#include <stdio.h>
 #include "config.h"
 #include "usart.h"
 #include "cmd.h"
@@ -19,6 +21,7 @@
 	#include "sd/mmc.h"
 #endif
 
+FILE mystdout = FDEV_SETUP_STREAM(usart_putchar, NULL, _FDEV_SETUP_WRITE);
 
 int main(void){
 	DDRA=0xFF;
@@ -30,42 +33,37 @@ int main(void){
 	PORTC=0x00;
 	PORTD=0x00;
 	usart_init(9600);
+	stdout = &mystdout;
 	sei();
-	usart_write_str(CRLL"AVR-Con alpha 0.1"CRLF);
+	printf(CRLL"AVR-Con alpha 0.1"CRLF);
 
 #if USE_SD == 1
-	usart_write_str("Boot SD");
+	printf("Boot SD");
 
 	if( FALSE == mmc_init() ){
-		usart_write_str(CRLF"ERR | MMC-Init: System halted");
+		printf(CRLF"ERR | MMC-Init: System halted");
 		return 0;
 	}
 
-	usart_write_str("...");
+	printf("...");
 
 	if( FALSE == fat_loadFatData() ){
-		usart_write_str(CRLF"ERR | FAT-Init: System halted");
+		printf(CRLF"ERR | FAT-Init: System halted");
 		return 0;
 	}
 #endif
 
-	usart_write_str("OK"CRLL);
+	printf("OK"CRLL);
 
 	while(1){
-//		char* ptr;
-//		uint16_t val = strtoul("123",&ptr,10);
-//		if(*ptr=='\0')
-//			usart_write("JoJo %i"CRLF,val);
-//		else
-//			usart_write("NONO"CRLF);
 
-		usart_write("> ");
+		printf("> ");
 
 		//wait for line input from usart ISR
 		usart_status.usart_ready=0;
 		while(!usart_status.usart_ready);
 
-		usart_write_str(CRLF);
+		printf(CRLF);
 
 		//parse line (exec cmd)
 		parse_line(usart_rx_buffer);

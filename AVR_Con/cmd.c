@@ -64,7 +64,7 @@ void parse_line(char* line){
 	while(strcmp(COMMAND_TABELLE[i].cmd,val_ptr[0])){
 		//if CMD not found
 		if (COMMAND_TABELLE[++i].cmd == 0) {
-			usart_write("ERR | Unknown Command: %s"CRLF,val_ptr[0]);
+			printf("ERR | Unknown Command: %s"CRLF,val_ptr[0]);
 			return;
 		}
 	}
@@ -196,13 +196,13 @@ static int8_t cmd_set(void){
 						else
 						(_SFR_IO8(reg + (offset * 3))) &= ~(1 << tmp);
 
-						usart_write("SET | %s = %i"CRLF,val_ptr[1],val);
+						printf("SET | %s = %i"CRLF,val_ptr[1],val);
 						ret = 1;
 					}
 				}
 				else{
 					_SFR_IO8(reg + (offset  *3)) = val;
-					usart_write("SET | %s = %i"CRLF,val_ptr[1],val);
+					printf("SET | %s = %i"CRLF,val_ptr[1],val);
 					ret = 1;
 				}
 			}
@@ -210,14 +210,14 @@ static int8_t cmd_set(void){
 				tmp = strtoul(val_ptr[1] + 1,&ptr,10);
 				if(*ptr == '\0' && tmp < VAR_BUF){
 					cmd_vars[tmp]=val;
-					usart_write("SET | %s = %i"CRLF,val_ptr[1],val);
+					printf("SET | %s = %i"CRLF,val_ptr[1],val);
 					ret = 1;
 				}
 			}
 		}
 	}
 	if(!(ret > ERROR))
-		usart_write("ERR | %s = %s"CRLF,val_ptr[1],val_ptr[2]);
+		printf("ERR | %s = %s"CRLF,val_ptr[1],val_ptr[2]);
 	return ERROR;
 }
 
@@ -228,32 +228,32 @@ static int8_t cmd_print(void){
 		if(parse_value(val_ptr[1],&tmp) > ERROR){
 			switch(val_ptr[2][0]){
 				case 'i':
-					usart_write("PRINT | %s = %i"CRLF,val_ptr[1],tmp);
+					printf("PRINT | %s = %i"CRLF,val_ptr[1],tmp);
 					ret = 1;
 					break;
 				case 'x':
-					usart_write("PRINT | %s = 0x%x"CRLF,val_ptr[1],tmp);
+					printf("PRINT | %s = 0x%x"CRLF,val_ptr[1],tmp);
 					ret = 1;
 					break;
 				case 'o':
-					usart_write("PRINT | %s = 0o%o"CRLF,val_ptr[1],tmp);
+					printf("PRINT | %s = 0o%o"CRLF,val_ptr[1],tmp);
 					ret = 1;
 					break;
 				case 'b':
-					usart_write("PRINT | %s = 0b%b"CRLF,val_ptr[1],tmp);
+					printf("PRINT | %s = 0b%d"CRLF,val_ptr[1],tmp);
 					ret = 1;
 					break;
-	//			case 'S': usart_write("DISP | %s = %s"CRLF,val_ptr[1],tmp;break;
+	//			case 'S': printf("DISP | %s = %s"CRLF,val_ptr[1],tmp;break;
 				default:
 					 //ALL YOUR BASE ARE BELONG TO US
-					usart_write("PRINT | DISP: '%s' wrong base"CRLF,val_ptr[2]);
+					printf("PRINT | DISP: '%s' wrong base"CRLF,val_ptr[2]);
 					ret = ERROR;
 					break;
 			}
 		}
 	}
 	if(!(ret > ERROR))
-		usart_write("ERR |  PRINT: %s not found"CRLF,val_ptr[1]);
+		printf("ERR |  PRINT: %s not found"CRLF,val_ptr[1]);
 	return ret;
 }
 
@@ -266,32 +266,32 @@ static int8_t cmd_open(void){
 	if(strlen(val_ptr[1]) > 0){
 		if( MMC_FILE_OPENED == ffopen((uint8_t*)val_ptr[1],'r') ){
 			seek = file.length;
-			usart_write("OPEN | %s"CRLL,val_ptr[1]);
-			char line_buf[40] = {0};
+			printf("OPEN | %s"CRLL,val_ptr[1]);
+			char line_buf[BUFFER_SIZE] = {0};
 			uint8_t cnt = 0;
 			do{
 				do{
 					line_buf[cnt++] = ffread();
 						if(line_buf[cnt-1] == '\r'){
 							line_buf[cnt-1] = '\0';
-							usart_write("  > %s"CRLF"    ",line_buf);
+							printf("  > %s"CRLF"    ",line_buf);
 							parse_line(line_buf);
-							usart_write(CRLF);
+							printf(CRLF);
 							cnt = 0;
 							line_buf[cnt] = '\0';
 							ffread();
 							seek--;
 						}
-				}while(--seek && (cnt < 40));
+				}while(--seek && (cnt < BUFFER_SIZE));
 				cnt = 0;
 				line_buf[cnt] = '\0';
 			}while(seek);
 			ffclose();
-			usart_write_str(CRLF);
+			printf(CRLF);
 			return 1;
 		}
 	}
-	usart_write("ERR |  OPEN %s"CRLF,val_ptr[1]);
+	printf("ERR |  OPEN %s"CRLF,val_ptr[1]);
 	return ERROR;
 }
 
@@ -300,19 +300,19 @@ static int8_t cmd_delay(void){
 	uint16_t parsedval = 0;
 	int8_t status = parse_value(val_ptr[2],&parsedval);
 	if((val_ptr[1][0] == 'm') && (status > ERROR)){
-		usart_write("DELAY |  %sS = %i"CRLF,val_ptr[1],parsedval);
+		printf("DELAY |  %sS = %i"CRLF,val_ptr[1],parsedval);
 		for(uint16_t i = 0; i < parsedval; i++)
 			_delay_ms(1);
 		return 1;
 
 	}
 	else if((val_ptr[1][0] == 'u') && (status > ERROR)){
-		usart_write("DELAY |  %sS = %i"CRLF,val_ptr[1],parsedval);
+		printf("DELAY |  %sS = %i"CRLF,val_ptr[1],parsedval);
 		for(uint16_t i = 0; i < parsedval; i++)
 			_delay_us(1);
 		return 1;
 	}
-	usart_write("ERR |  %s = %i"CRLF,val_ptr[2],status);
+	printf("ERR |  %s = %i"CRLF,val_ptr[2],status);
 	return ERROR;
 }
 #endif

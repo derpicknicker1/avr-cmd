@@ -25,6 +25,7 @@
 	#define _UART_H
 
 	#include <avr/pgmspace.h>
+	#include <stdio.h>
 	#include "config.h"
 
 	#define USART_ECHO	1
@@ -99,11 +100,11 @@
 	//----------------------------------------------------------------------------
 	
 	void usart_init(unsigned long baudrate); 
-	void usart_write_char(char c);
-	void usart_write_str(char *str);
-	
-	void usart_write_P (const char *Buffer,...);
-	#define usart_write(format, args...)   usart_write_P(PSTR(format) , ## args)
+	uint8_t usart_putchar(uint8_t c, FILE *stream);
+//	void usart_write_str(char *str);
+//
+//	void usart_write_P (const char *Buffer,...);
+//	#define printf(format, args...)   usart_write_P(PSTR(format) , ## args)
 
 	void hist_add(char *ptr);
 	//----------------------------------------------------------------------------

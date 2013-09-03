@@ -26,7 +26,8 @@ enum{
 	CONV_O 	=  3,	// 	 3 = octal
 	CONV_SW =  4,	//	 4 = on/off/in/out
 	CONV_REG=  5,	//	 5 = Register
-	CONV_VA =  6	//	 6 = Var
+	CONV_VA =  6,	//	 6 = Var
+	CONV_ARG=  7	// 	 7 = File-Arg
 };
 
 	typedef struct
@@ -36,5 +37,6 @@ enum{
 	} COMMAND_STRUCTUR;
 
 	void parse_line(char* line);
+	void file_args_init(void);
 
 #endif /* CMD_H_ */

@@ -38,6 +38,7 @@ int main(void){
 
 	printf(ESC_CLS""ESC_GREEN""ESC_BOLD"AVR-Con alpha 0.1"CRLF""ESC_CLEAR);
 
+	file_args_init();
 #if USE_SD == 1
 	printf("Boot SD");
 

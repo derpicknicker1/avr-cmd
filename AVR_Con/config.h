@@ -24,10 +24,10 @@
 	#define VAR_BUF 10 // 0-99
 
 	// number of parameters taht can be extracted from one line
-	#define VAL_BUF 20 // 0-99
+	#define ARG_BUF 20 // 0-99
 
 	// length one parameter can have
-	#define VAL_TMP_BUF 16
+	#define ARG_TMP_BUF 16
 
 	// select Chars used for line feed
 		// 0 = without carriage return 	(\n)

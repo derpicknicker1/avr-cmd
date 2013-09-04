@@ -397,41 +397,48 @@ static int8_t cmd_math(void){
 		switch(arg_ptr[0][0]){
 			case 'a' :
 				if(arg_ptr[1][1] == 'd'){
+          // ADD
 					public_vars[tmp3] = tmp1 + tmp2;
 					c = "+";
 				}
 				else{
+          // AND
 					public_vars[tmp3] = tmp1 & tmp2;
 					c = "&";
 				}
 				break;
 			case 's' :
 				if(arg_ptr[1][2] == 'l'){
+          // SHL - SHIFT LEFT
 					public_vars[tmp3] = tmp1 << tmp2;
 					c = "<<";
 				}
 				else if(arg_ptr[1][2] == 'r'){
+          // SHR - SHIFT RIGHT
 					public_vars[tmp3] = tmp1 >> tmp2;
 					c = ">>";
 				}
 				else{
+          // SUB
 					public_vars[tmp3] = tmp1 - tmp2;
 					c = "-";
 				}
 				break;
 			case 'm' :
 				if(arg_ptr[0][1] == 'u'){
+          // MUL
 					public_vars[tmp3] = tmp1 * tmp2;
 					 c = "*";
 				}
 				else{
+          // MOD
 					public_vars[tmp3] = tmp1 % tmp2;
 					 c = "%";
 				}
 				break;
-			case 'd' : public_vars[tmp3] = tmp1 / tmp2; c = "/"; break;
-			case 'o' : public_vars[tmp3] = tmp1 | tmp2; c = "|"; break;
-			case 'x' : public_vars[tmp3] = tmp1 ^ tmp2; c = "^"; break;
+			case 'd' : public_vars[tmp3] = tmp1 / tmp2; c = "/"; break; // DIV
+			case 'o' : public_vars[tmp3] = tmp1 | tmp2; c = "|"; break; // OR
+			case 'x' : public_vars[tmp3] = tmp1 ^ tmp2; c = "^"; break; // XOR
 		}
 		printf(ESC_YELLOW"%s |  %s %s %s = %i"ESC_CLEAR,strupr(arg_ptr[0]),arg_ptr[1],c,arg_ptr[2],public_vars[tmp3]);
 		return 1;

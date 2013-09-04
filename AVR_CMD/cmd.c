@@ -222,6 +222,7 @@ static int8_t cmd_set(void){
 				case 'd': reg = DDR_REG; break;
 				case 'p': reg = PORT_REG; break;
 			}
+      //TODO: Pruefen ob arg_ptr[1][1] im gueltigen bereich liegt -> bufferover/-underrun.
 			offset =  (arg_ptr[1][1] - 97);
 
 			printf(ESC_YELLOW);

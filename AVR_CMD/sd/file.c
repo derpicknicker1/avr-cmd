@@ -3,6 +3,8 @@
  *  Neuste Version: http://www.mikrocontroller.net/svnbrowser/avr-fat32/
  *	Autor: Daniel R.
  */
+#include <stdlib.h>
+#include <stdio.h>
 #include "../config.h"
 
 #if USE_SD == 1
@@ -23,7 +25,7 @@ struct File_t file;			// wichtige dateibezogene daten/variablen
 //*******************************************************************************************************************************
 // funktionsprototypen die nur in dieser datei benutzt werden !
 #if (MMC_LS==TRUE)
-	static void lsRowsOfClust (fptr_t uputs_ptr, uint32_t start_sec);	// zeigt reihen eines clusters an, ab start_sec, muss zeiger auf eine ausgabe funktion überbeben bekommen
+	static void lsRowsOfClust (uint32_t start_sec);	// zeigt reihen eines clusters an, ab start_sec, muss zeiger auf eine ausgabe funktion überbeben bekommen
 #endif
 //*******************************************************************************************************************************
 
@@ -291,11 +293,11 @@ uint8_t ffcdLower(void){
 // eintrag in der reihe ist (nicht geloescht, nicht frei usw). die sektoren des clusters werden nachgeladen.
 // die dateien werden mit namen und datei groesse angezeigt.
 // *******************************************************************************************************************************
-static void lsRowsOfClust (fptr_t uputs_ptr,uint32_t start_sec){
+static void lsRowsOfClust (uint32_t start_sec){
 
 	uint16_t row;				// reihen
 	uint8_t sec;				// sektoren
-	uint8_t tmp[12];			// tmp string zur umwandlung
+	unsigned char tmp[30];			// tmp string zur umwandlung
 	uint8_t i;				// um dateinamen zu lesen
 
 	sec=0;
@@ -310,14 +312,13 @@ static void lsRowsOfClust (fptr_t uputs_ptr,uint32_t start_sec){
 					tmp[i]=fat.sector[row+i];
 				}
 				tmp[i]='\0';
-				uputs_ptr(tmp);
+				printf("%s",tmp);
 
 				// reihe auf file stuct laden um file.length zu bekommen. koverieren und anzeigen...
 				fat_loadRowOfSector(row);		
-				uputs_ptr((uint8_t*)" ");
-				ltostr(file.length,(char*)tmp,12,10);
-				uputs_ptr(tmp);
-				uputs_ptr((uint8_t*)"\n");
+				printf(" ");
+				ltoa(file.length,(char*)tmp,10);
+				printf("%s\r\n",tmp);
 			}
 		}
 	}while( ++sec < fat.secPerClust );
@@ -328,7 +329,7 @@ static void lsRowsOfClust (fptr_t uputs_ptr,uint32_t start_sec){
 // unterscheidung ob man sich im rootDir befindet noetig, weil bei fat16 im root dir eine bestimmt anzahl sektoren durchsucht
 // werden muessen und bei fat32 ab einem start cluster ! ruft lsRowsOfClust auf um cluster/sektoren anzuzeigen.
 // *******************************************************************************************************************************
-void ffls(fptr_t uputs_ptr){
+void ffls(void){
 
 	uint8_t 		sectors;	// variable um durch sektoren zu zaehlen
 	uint32_t 	clusters;	// variable um durch cluster des verzeichnisses zu gehen
@@ -341,7 +342,7 @@ void ffls(fptr_t uputs_ptr){
 		sectors = 0;
 		do{
 			// root-dir eintraege anzeigen
-			lsRowsOfClust( uputs_ptr, clusters + sectors );
+			lsRowsOfClust( clusters + sectors );
 			sectors += fat.secPerClust;
 		}while( sectors < (uint8_t)32 );
 	}
@@ -350,7 +351,7 @@ void ffls(fptr_t uputs_ptr){
 	else {
 		// durch cluster des verzeichnisses gehen und eintraege anzeigen
 		while(!((clusters>=0x0ffffff8&&fat.fatType==32)||(clusters>=0xfff8&&fat.fatType==16))){		// prueft ob weitere sektoren zum lesen da sind (fat32||fat16)
-			lsRowsOfClust( uputs_ptr, fat_clustToSec(clusters) );									// zeigt reihen des clusters an
+			lsRowsOfClust(  fat_clustToSec(clusters) );									// zeigt reihen des clusters an
 			clusters = fat_getNextCluster(clusters);												// liest naechsten cluster des dir-eintrags (unterverzeichniss groeßer 16 einträge)
 		}
 	}

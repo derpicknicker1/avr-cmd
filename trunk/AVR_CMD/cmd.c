@@ -24,6 +24,7 @@
 	static int8_t cmd_writeF(void);
 	static int8_t cmd_delF(void);
 	static int8_t cmd_lsF(void);
+	static int8_t cmd_openF(void);
 
 	// delay commands are only useful in scripts
 	static int8_t cmd_delay(void);
@@ -66,6 +67,7 @@ COMMAND_STRUCTUR COMMAND_TABLE[] = // Befehls-Tabelle
 	{"xor",cmd_math},
 //SD Functions
 #if USE_SD == 1
+		{"open",cmd_openF},
 		{"exec",cmd_execF},
 		{"show",cmd_showF},
 		{"new",cmd_newF},
@@ -553,6 +555,48 @@ static int8_t cmd_delF(void){
 static int8_t cmd_lsF(void){
 		ffls();
 		return 1;
+}
+
+
+//----------------------------------------------------------------------------------------------------
+// cmd_openF() prints the content of a file then waits for input which will
+	// be appended to file. End this mode by typing '%exit'
+	//
+	// arg1 must be a valid filename
+	//
+	// returns status of execution
+static int8_t cmd_openF(void){
+	uint32_t seek;
+	if( MMC_FILE_OPENED == ffopen((uint8_t*)arg_ptr[1],'r') ){ // if file can be opened
+		seek = file.length;
+		printf(ESC_YELLOW"OPEN | %s ... "ESC_GREEN"OK"ESC_CLEAR""CRLL,arg_ptr[1]);
+		do{
+			uart_putc(ffread(),NULL);  // output file content
+
+		}while(--seek); // uintill EOF
+
+		ffseek(file.length); // set file pointer to EOF
+		while(1){
+			usart_status.usart_ready = 0;
+			printf("> ");
+			while(usart_status.usart_ready==0); // wait for line input
+			if(strcmp(usart_rx_buffer,"%exit")){ // if not exit command
+				ffwrites((uint8_t*)usart_rx_buffer); //write line to file
+				ffwrite('\r');
+				ffwrite('\n');
+				printf(CR""ESC_CLRL"%s"CRLF,usart_rx_buffer);
+			}
+			else //if exit command, break
+				break;
+		}
+		printf(CRLF""ESC_YELLOW"CLOSE | %s ... "ESC_GREEN"OK"ESC_CLEAR""CRLF,file_arg_ptr[1]);
+		ffclose(); // close file
+		return 1;
+	}
+
+	// file not found...fu** you...ERROR-Time
+	printf(ESC_RED"ERR |  Can't open %s"ESC_CLEAR,arg_ptr[1]);
+	return ERROR;
 }
 
 

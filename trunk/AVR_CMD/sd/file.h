@@ -20,7 +20,7 @@
 		extern uint8_t 	ffclose(void);						// muss aufgerufen werden bevor neue datei bearbeitet wird.
 		extern void 		ffseek(uint32_t offset);	// setzt zeiger:bytesOfSec auf position in der geöffneten datei.
 		extern uint8_t 	ffcd( uint8_t name[]);		// wechselt direktory
-		extern void 		ffls(fptr_t uputs_ptr);				// zeigt direktory inhalt an, muss zeiger auf eine ausgabe funktion uebergeben bekommen
+		extern void 		ffls(void);				// zeigt direktory inhalt an, muss zeiger auf eine ausgabe funktion uebergeben bekommen
 		extern uint8_t 	ffcdLower(void);					// geht ein direktory zurueck, also cd.. (parent direktory)
 		extern uint8_t 	ffrm( uint8_t name[]);		// loescht datei aus aktuellem verzeichniss.
 		extern void 		ffmkdir( uint8_t name[]); 	// legt ordner in aktuellem verzeichniss an.

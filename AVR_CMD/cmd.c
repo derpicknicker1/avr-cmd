@@ -235,7 +235,7 @@ static int8_t parse_value(char* value, uint16_t* out){
 
 		offset =  (value[1] - 97);		// calculate register offset depending on given port name (a-d)
 
-		if((reg > 0) && (offset < 4)){ // if register found and offset is valid
+		if((reg >= 0) && (offset < 4)){ // if register found and offset is valid
 			if(strlen(value) == 3){ // if a pin of a port is adressed
 				val = strtoul(value + 2,&ptr,10); // get pin number as numeric value
 				if(*ptr == '\0' && val < 8){ // if pin number was valid output value will be set to pin state (1 or 0)
@@ -331,6 +331,7 @@ static int8_t cmd_set(void){
 			}
 		}
 		else if(strlen(arg_ptr[1]) > 1 && arg_ptr[1][0] == '$'){ // no port? then maybe a var is addressed
+			printf("JO!");
 			tmp = strtoul(arg_ptr[1] + 1,&ptr,10); // get numeric value of var number
 			if(*ptr == '\0' && tmp < VAR_BUF){ // if var number is a valid value
 				public_vars[tmp]=val; //save value to user var
@@ -553,13 +554,13 @@ static int8_t cmd_writeF(void){
 
 //----------------------------------------------------------------------------------------------------
 // cmd_loop() starts loop which executes loop block arg1 times
-	//runs one time even when value is 0
+	//runs one time even when value is 0 or not valid
 	// arg1 must be a valid value for parse_value
 	//
 	// returns status of execution
 static int8_t cmd_loop(void){
 	parse_value(arg_ptr[1],&loop_cnt); // get numeric value of arg1
-	if(loop_cnt) //when value is > 0 we have to decrement so execute exact number
+	if(loop_cnt) //when value is > 0 we have to decrement to execute exact number
 		loop_cnt--;
 	loop_start = file.seek + file.cntOfBytes; // save position in file to restart the loop
 	return 1;
@@ -721,7 +722,7 @@ static int8_t cmd_math(void){
 		if(tmp3 < VAR_BUF){
 			switch(arg_ptr[0][0]){ //decide which operation should be executed
 				case 'a' :
-					if(arg_ptr[1][1] == 'd'){
+					if(arg_ptr[0][1] == 'd'){
 						public_vars[tmp3] = tmp1 + tmp2; // add value of arg2 to value of arg1 and save to arg1
 						c = "+";
 					}
@@ -731,11 +732,11 @@ static int8_t cmd_math(void){
 					}
 					break;
 				case 's' :
-					if(arg_ptr[1][2] == 'l'){
+					if(arg_ptr[0][2] == 'l'){
 						public_vars[tmp3] = tmp1 << tmp2; //shift l
 						c = "<<";
 					}
-					else if(arg_ptr[1][2] == 'r'){
+					else if(arg_ptr[0][2] == 'r'){
 						public_vars[tmp3] = tmp1 >> tmp2; //shift r
 						c = ">>";
 					}

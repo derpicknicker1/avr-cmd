@@ -3,9 +3,11 @@
  *
  *  Created on: 28.08.2013
  *      Author: Grisu
+ *      Project home: https://code.google.com/p/avr-cmd/
  *
  *      This is the Version for Mega2560 Hardware.
  *      Using USART0 @ 9600Baud,8N1
+ *
  */
 
 #include <avr/interrupt.h>
@@ -42,9 +44,17 @@ int main(void){
 	// enable interrupts
 	sei();
 
-	printf(ESC_CLS""ESC_GREEN""ESC_BOLD"AVR-Con alpha 0.1"CRLF""ESC_CLEAR);
+	printf(ESC_CLS
+			ESC_GREEN
+			ESC_BOLD
+			"#####################"CRLF
+			"# AVR-Con alpha 0.1 #"CRLF
+			"#####################"CRLF
+			ESC_CLEAR
+			"Compiled on "__DATE__" at "__TIME__""CRLF
+			"Compiled with GCC Version "__VERSION__""CRLF);
 
-
+// mmc and fat initialization is only needed when SD is in use
 #if USE_SD == 1
 
 	// initialize file_arg list
@@ -95,7 +105,7 @@ int main(void){
 	//   // ^^ ^/\| v""v |/\^ ^ ^\\
 	//  // ^^/\/ /  `~~`  \ \/\^ ^\\
 	//  -----------------------------
-	/// HERE BE DRAGONS */
+	///        HERE BE DRAGONS         */
 
 	return 0; //returns 0
 	

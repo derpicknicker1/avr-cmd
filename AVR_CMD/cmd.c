@@ -26,11 +26,15 @@
 	static int8_t cmd_lsF(void);
 	static int8_t cmd_openF(void);
 
-	// delay commands are only useful in scripts
+	// delay and loop commands are only useful in scripts
 	static int8_t cmd_delay(void);
+	static int8_t cmd_loop(void);
+	static int8_t cmd_endLoop(void);
 
 	// pointer buffer for file argumenst
-	char* file_arg_ptr[ARG_BUF] = {0};
+	char* file_arg_ptr[ARG_BUF];
+	uint32_t loop_start = 0;
+	uint16_t loop_cnt = 0;
 #endif
 
 // Functions for command line parsing
@@ -75,6 +79,8 @@ COMMAND_STRUCTUR COMMAND_TABLE[] = // Befehls-Tabelle
 		{"write",cmd_writeF},
 		{"ls",cmd_lsF},
 		{"delay",cmd_delay},
+		{"loop",cmd_loop},
+		{"endloop",cmd_endLoop},
 #endif
 	{NULL,NULL} // Marks the end of command table
 };
@@ -149,11 +155,18 @@ static void get_arg_from_line(uint8_t position, char* line, char* output){
 			}
 		}
 
+		// if we are in a string but not at right argument we have to check for EO String
+		else if(line[i] == '"' && line[i-1] != '\\' && (position != spaces)){
+			strflag = 0;
+		}
+
 		// if we are at requested position we get the chars from the command line string
 		if(position == spaces){
 			if(line[i] == '"' && strflag){ // is it the end of a string or an escape for "
 				if(line[i-1] == '\\')
 					*(output-1) = '"';
+				else
+					spaces++; // ends while
 			}
 			else
 				*output++ = line[i];
@@ -255,7 +268,9 @@ static int8_t parse_value(char* value, uint16_t* out){
 #endif
 	}
 // DECIMAL
-	else{ // Last try...if the type of value none of the above types, try to make an integer of it
+	else if(strlen(value) > 0){ // Last try...if the type of value is none of
+								// the above types, try to make an integer of it
+								// but not when value is empty
 		val = strtoul(value,&ptr,10); // get numeric value of value string
 		if(*ptr == '\0') // value is a valid number
 			status = CONV_D;
@@ -263,6 +278,7 @@ static int8_t parse_value(char* value, uint16_t* out){
 	*out = val; // set output to extracted value, 0 when conversion failed
 	return status;
 }
+
 
 //----------------------------------------------------------------------------------------------------
 // cmd_set() executes the 'set' command. It expects a value in arg1 and arg2
@@ -413,40 +429,47 @@ static int8_t cmd_print(void){
 	//
 	// returns status of execution
 static int8_t cmd_execF(void){
-	uint32_t seek;
+	uint32_t seek, tmp_pos;
 	uint8_t i;
 
 	if( MMC_FILE_OPENED == ffopen((uint8_t*)arg_ptr[1],'r') ){ // try to open file
 		seek = file.length;
-		printf(ESC_YELLOW"OPEN | %s ... ",arg_ptr[1]);
 
-		for(i = 0; i < ARG_BUF; i++) // copy args to file_arg buffer for use in script
-			file_arg_ptr[i] = strcpy(malloc((strlen(arg_ptr[i])+1)*sizeof(char)),arg_ptr[i]);
+		printf(ESC_YELLOW"OPEN | %s ... "ESC_GREEN"OK"ESC_CLEAR""CRLL,arg_ptr[1]);
 
-		printf(ESC_GREEN"OK"ESC_CLEAR""CRLL);
-		char line_buf[BUFFER_SIZE] = {0};
-		uint8_t cnt = 0;
-		do{ //do while not EOF
-			do{ //do while not EOF and line buffer is not full
-				line_buf[cnt++] = ffread();  //get chat from file to line buffer
-					if(line_buf[cnt-1] == '\r'){ // if end of line
-						line_buf[cnt-1] = '\0';
-						printf(ESC_CYAN"  > %s"CRLF"    ",line_buf);
-						parse_line(line_buf); // execute commandline in line buffer
-						printf(CRLF);
-						cnt = 0;
-						line_buf[cnt] = '\0';
-						ffread();
-						seek--;
-					}
-			}while(--seek && (cnt < BUFFER_SIZE)); //do while not EOF and line buffer is not full
-			cnt = 0;  // line buffer overflof, discard buffer and reset to 0 then input will be continued
-			line_buf[cnt] = '\0';
-		}while(seek);  //do while not EOF
-		printf(CRLF""ESC_YELLOW"CLOSE | %s ... ",file_arg_ptr[1]);
+		if(seek > 0){ // if file is not empty
+			for(i = 0; i < ARG_BUF; i++) // copy args to file_arg buffer for use in script
+				file_arg_ptr[i] = strcpy(malloc((strlen(arg_ptr[i])+1)*sizeof(char)),arg_ptr[i]);
+
+			char line_buf[BUFFER_SIZE] = {0};
+			uint8_t cnt = 0;
+			do{ //do while not EOF
+				do{ //do while not EOF and line buffer is not full
+					line_buf[cnt++] = ffread();  //get char from file to line buffer
+						if(line_buf[cnt-1] == '\r'){ // if end of line
+							line_buf[cnt-1] = '\0';
+							ffread(); //discard newline char
+							seek--;
+							tmp_pos = file.seek + file.cntOfBytes; // save position in file
+							printf(ESC_CYAN"  > %s"CRLF"    ",line_buf);
+							parse_line(line_buf); // execute command line in line buffer
+							printf(CRLF);
+
+							//if cmd_endLoop() resets the position to start of loop
+							if(tmp_pos > (file.seek + file.cntOfBytes))
+								// we must rewind seek to prevent file from closing to early
+								seek += (tmp_pos - (file.seek + file.cntOfBytes));
+							cnt = 0;
+							line_buf[cnt] = '\0';
+						}
+				}while(--seek && (cnt < BUFFER_SIZE)); //do while not EOF and line buffer is not full
+				cnt = 0;  // line buffer overflof, discard buffer and reset to 0 then input will be continued
+				line_buf[cnt] = '\0';
+			}while(seek);  //do while not EOF
+		}
+		printf(CRLF""ESC_YELLOW"CLOSE | %s ... "ESC_GREEN"OK"ESC_CLEAR""CRLF,file_arg_ptr[1]);
 		ffclose(); // close file
 		file_args_init(); // free file_arg buffer
-		printf(ESC_GREEN"OK"ESC_CLEAR""CRLF);
 		return 1;
 	}
 	// file not found...fu** you...ERROR-Time
@@ -465,13 +488,13 @@ static int8_t cmd_showF(void){
 	uint32_t seek;
 	if( MMC_FILE_OPENED == ffopen((uint8_t*)arg_ptr[1],'r') ){ // if file can be opened
 		seek = file.length;
-		printf(ESC_YELLOW"OPEN | %s ... ",arg_ptr[1]);
-		printf(ESC_GREEN"OK"ESC_CLEAR""CRLL);
-		do{
-			uart_putc(ffread(),NULL);  // output file content
+		printf(ESC_YELLOW"OPEN | %s ... "ESC_GREEN"OK"ESC_CLEAR""CRLL,arg_ptr[1]);
+		if(seek > 0){  // if file is not empty
+			do{
+				uart_putc(ffread(),NULL);  // output file content
 
-		}while(--seek); // uintill EOF
-
+			}while(--seek); // uintill EOF
+		}
 		printf(CRLF""ESC_YELLOW"CLOSE | %s ... "ESC_GREEN"OK"ESC_CLEAR""CRLF,file_arg_ptr[1]);
 		ffclose(); // close file
 		return 1;
@@ -491,7 +514,7 @@ static int8_t cmd_showF(void){
 static int8_t cmd_newF(void){
 	if(MMC_FILE_CREATED == ffopen((uint8_t*)arg_ptr[1],'c') ){ // try to create file
 		printf(ESC_YELLOW"NEW | %s ... ",arg_ptr[1]);
-		ffwrite(0x00); // write a terminating char so file is "empty" but not empty
+//		ffwrite(0x00); // write a terminating char so file is "empty" but not empty
 		ffclose(); // close file
 		printf(ESC_GREEN"OK"ESC_CLEAR""CRLF);
 		return 1;
@@ -513,8 +536,7 @@ static int8_t cmd_writeF(void){
 	if((strlen(arg_ptr[1]) > 0) && (strlen(arg_ptr[2]) > 0)){ // is there a filename and a string to write
 		if(MMC_FILE_OPENED == ffopen((uint8_t*)arg_ptr[1],'r') ){ // try to open file
 			printf(ESC_YELLOW"WRITE | %s ... ",arg_ptr[1]);
-			if(file.length>1) // when file is not empty
-				ffseek(file.length); // set file pointer to EOF
+			ffseek(file.length); // set file pointer to EOF
 		   	ffwrites((uint8_t*)arg_ptr[2]); // put string of arg2 to file
 			ffwrite(0x0D);		// new line in file
 		   	ffwrite(0x0A);
@@ -526,6 +548,35 @@ static int8_t cmd_writeF(void){
 	// file not found...fu** you...ERROR-Time
 	printf(ESC_RED"ERR |  Can't write to %s"ESC_CLEAR,arg_ptr[1]);
 	return ERROR;
+}
+
+
+//----------------------------------------------------------------------------------------------------
+// cmd_loop() starts loop which executes loop block arg1 times
+	//runs one time even when value is 0
+	// arg1 must be a valid value for parse_value
+	//
+	// returns status of execution
+static int8_t cmd_loop(void){
+	parse_value(arg_ptr[1],&loop_cnt); // get numeric value of arg1
+	if(loop_cnt) //when value is > 0 we have to decrement so execute exact number
+		loop_cnt--;
+	loop_start = file.seek + file.cntOfBytes; // save position in file to restart the loop
+	return 1;
+}
+
+
+//----------------------------------------------------------------------------------------------------
+// cmd_endLoop() indicates the end of a loop block and handles restart of loop
+	//
+	// no input
+	//
+	// returns status of execution
+static int8_t cmd_endLoop(void){
+	if(loop_cnt-- > 0){ //if there are some executions left
+		ffseek(loop_start); // set back file pointer to first command of loop
+	}
+	return 1;
 }
 
 
@@ -570,15 +621,14 @@ static int8_t cmd_openF(void){
 	if( MMC_FILE_OPENED == ffopen((uint8_t*)arg_ptr[1],'r') ){ // if file can be opened
 		seek = file.length;
 		printf(ESC_YELLOW"OPEN | %s ... "ESC_GREEN"OK"ESC_CLEAR""CRLL,arg_ptr[1]);
-		do{
-			uart_putc(ffread(),NULL);  // output file content
-
-		}while(--seek); // uintill EOF
-
-		ffseek(file.length); // set file pointer to EOF
+		if(seek > 0){ // if file is not empty
+			do{
+				uart_putc(ffread(),NULL);  // output file content
+			}while(--seek); // uintill EOF
+		}
 		while(1){
 			usart_status.usart_ready = 0;
-			printf("> ");
+			printf("  > ");
 			while(usart_status.usart_ready==0); // wait for line input
 			if(strcmp(usart_rx_buffer,"%exit")){ // if not exit command
 				ffwrites((uint8_t*)usart_rx_buffer); //write line to file
@@ -636,11 +686,15 @@ static int8_t cmd_delay(void){
 	// no input
 	//
 	// no return
-// TODO: stop at empty file_arg
+// DONE: stop at empty file_arg
 void file_args_init(void){
 	for(uint16_t i = 0; i < ARG_BUF; i++){ // for each file_arg in buffer
-		free(file_arg_ptr[i]); // free memory
-		file_arg_ptr[i]=strcpy(malloc(sizeof(char)), ""); // set file_arg i to empty string
+		if(file_arg_ptr[i][0] == '\0') // if file_arg is empty
+			break; // we can stop. all buffers are empty now
+		else{
+			free(file_arg_ptr[i]); // free memory
+			file_arg_ptr[i]=strcpy(malloc(sizeof(char)), ""); // set file_arg i to empty string
+		}
 	}
 }
 
@@ -656,7 +710,7 @@ void file_args_init(void){
 	// arg2 must be a var or valid numeric input value for parse_value()
 	//
 	// returns status of execution
-// TODO: check for valid arg number
+// DONE: check for valid arg number
 static int8_t cmd_math(void){
 	uint16_t tmp1,tmp2,tmp3;
 	char* c = "";
@@ -664,48 +718,49 @@ static int8_t cmd_math(void){
 	//if arg1 and arg2 have valid numeric values and arg1 is a var
 	if((parse_value(arg_ptr[1],&tmp1) > ERROR) && (parse_value(arg_ptr[2],&tmp2) > ERROR)
 			&& (arg_ptr[1][0] == '$') && (parse_value(arg_ptr[1]+1,&tmp3) > ERROR)){
-
-		switch(arg_ptr[0][0]){ //decide which operation should be executed
-			case 'a' :
-				if(arg_ptr[1][1] == 'd'){
-					public_vars[tmp3] = tmp1 + tmp2; // add value of arg2 to value of arg1 and save to arg1
-					c = "+";
-				}
-				else{
-					public_vars[tmp3] = tmp1 & tmp2; // bitwise and...
-					c = "&";
-				}
-				break;
-			case 's' :
-				if(arg_ptr[1][2] == 'l'){
-					public_vars[tmp3] = tmp1 << tmp2; //shift l
-					c = "<<";
-				}
-				else if(arg_ptr[1][2] == 'r'){
-					public_vars[tmp3] = tmp1 >> tmp2; //shift r
-					c = ">>";
-				}
-				else{
-					public_vars[tmp3] = tmp1 - tmp2; // Subtract
-					c = "-";
-				}
-				break;
-			case 'm' :
-				if(arg_ptr[0][1] == 'u'){
-					public_vars[tmp3] = tmp1 * tmp2; // multiply
-					 c = "*";
-				}
-				else{
-					public_vars[tmp3] = tmp1 % tmp2; // modulo
-					 c = "%";
-				}
-				break;
-			case 'd' : public_vars[tmp3] = tmp1 / tmp2; c = "/"; break; // divide
-			case 'o' : public_vars[tmp3] = tmp1 | tmp2; c = "|"; break; // bitwise or
-			case 'x' : public_vars[tmp3] = tmp1 ^ tmp2; c = "^"; break; // bitwise xor
+		if(tmp3 < VAR_BUF){
+			switch(arg_ptr[0][0]){ //decide which operation should be executed
+				case 'a' :
+					if(arg_ptr[1][1] == 'd'){
+						public_vars[tmp3] = tmp1 + tmp2; // add value of arg2 to value of arg1 and save to arg1
+						c = "+";
+					}
+					else{
+						public_vars[tmp3] = tmp1 & tmp2; // bitwise and...
+						c = "&";
+					}
+					break;
+				case 's' :
+					if(arg_ptr[1][2] == 'l'){
+						public_vars[tmp3] = tmp1 << tmp2; //shift l
+						c = "<<";
+					}
+					else if(arg_ptr[1][2] == 'r'){
+						public_vars[tmp3] = tmp1 >> tmp2; //shift r
+						c = ">>";
+					}
+					else{
+						public_vars[tmp3] = tmp1 - tmp2; // Subtract
+						c = "-";
+					}
+					break;
+				case 'm' :
+					if(arg_ptr[0][1] == 'u'){
+						public_vars[tmp3] = tmp1 * tmp2; // multiply
+						 c = "*";
+					}
+					else{
+						public_vars[tmp3] = tmp1 % tmp2; // modulo
+						 c = "%";
+					}
+					break;
+				case 'd' : public_vars[tmp3] = tmp1 / tmp2; c = "/"; break; // divide
+				case 'o' : public_vars[tmp3] = tmp1 | tmp2; c = "|"; break; // bitwise or
+				case 'x' : public_vars[tmp3] = tmp1 ^ tmp2; c = "^"; break; // bitwise xor
+			}
+			printf(ESC_YELLOW"%s |  %s %s %s = %u"ESC_CLEAR,strupr(arg_ptr[0]),arg_ptr[1],c,arg_ptr[2],public_vars[tmp3]);
+			return 1;
 		}
-		printf(ESC_YELLOW"%s |  %s %s %s = %u"ESC_CLEAR,strupr(arg_ptr[0]),arg_ptr[1],c,arg_ptr[2],public_vars[tmp3]);
-		return 1;
 	}
 	// fufufufufufufufu
 	printf(ESC_RED"ERR |  %s %s %s"ESC_CLEAR,arg_ptr[1],arg_ptr[0],arg_ptr[2]);

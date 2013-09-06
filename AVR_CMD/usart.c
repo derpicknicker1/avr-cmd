@@ -41,10 +41,12 @@ char *hist_buffer_pointer[HIST_BUFFER_SIZE];
 	// no return
 void uart_init(unsigned long baudrate) {
 		// Calculate value for baud rate register
-		uint16_t UBRR_BAUD  = ((F_CPU / (16UL * baudrate)) - 1);
-		//set baud rate
-	    UBRR0H = (uint8_t) (UBRR_BAUD>>8);
-	    UBRR0L = (uint8_t) (UBRR_BAUD & 0x0ff);
+//		uint16_t UBRR_BAUD  = ((F_CPU / (16UL * baudrate)) - 1);
+//		//set baud rate
+//	    UBRR0H = (uint8_t) (UBRR_BAUD>>8);
+//	    UBRR0L = (uint8_t) (UBRR_BAUD & 0x0ff);
+		UBRR0 = baudrate;
+		//UCSR0A|=(1<<U2X0);
 	    //enable rx, tx and rx interrupt
 	    UCSR0B = (1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0);
 	    //8 data bits

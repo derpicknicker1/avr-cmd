@@ -331,7 +331,6 @@ static int8_t cmd_set(void){
 			}
 		}
 		else if(strlen(arg_ptr[1]) > 1 && arg_ptr[1][0] == '$'){ // no port? then maybe a var is addressed
-			printf("JO!");
 			tmp = strtoul(arg_ptr[1] + 1,&ptr,10); // get numeric value of var number
 			if(*ptr == '\0' && tmp < VAR_BUF){ // if var number is a valid value
 				public_vars[tmp]=val; //save value to user var

@@ -19,6 +19,20 @@
 	// should UART echo the received inputs
 	#define USART_ECHO	1 // 0=off, 1=on
 
+	#define BAUD_2K4 416
+	#define BAUD_4K8 201
+	#define BAUD_9K6 103
+	#define BAUD_14K4 68
+	#define BAUD_19K2 51
+	#define BAUD_28K8 34
+	#define BAUD_38K4 25
+	#define BAUD_57K6 16
+	#define BAUD_76K8 12
+	#define BAUD_115K2 8
+	#define BAUD_250K 3
+	#define BAUD_500K 1
+	#define BAUD_1M 0
+
 	// defines for line feeds to use by user
 	#define CR "\r"
 	#define LF "\n"

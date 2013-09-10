@@ -27,7 +27,7 @@
 	#define ARG_BUF 20 // 0-99
 
 	// length one parameter can have
-	#define ARG_TMP_BUF 100
+	#define ARG_TMP_BUF 100// should be same as BUFFER_SIZE
 
 	// select Chars used for line feed
 		// 0 = without carriage return 	(\n)

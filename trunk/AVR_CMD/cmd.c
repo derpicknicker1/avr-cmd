@@ -33,8 +33,9 @@
 
 	// pointer buffer for file argumenst
 	char* file_arg_ptr[ARG_BUF];
+	char loop_tmp_arg[6];
 	uint32_t loop_start = 0;
-	uint16_t loop_cnt = 0;
+	uint16_t loop_cnt = 0, loop_cnt_start = 0;
 #endif
 
 // Functions for command line parsing
@@ -256,7 +257,7 @@ static int8_t parse_value(char* value, uint16_t* out){
 			}
 		}
 
-// this value conversion is only needed scripts
+// this value conversion is only needed in scripts
 #if USE_SD == 1
 		else if(strlen(value) > 1 && value[0] == '@'){ // no port, no var. but file_arg?
 			val = (uint16_t)strtoul(value + 1,&ptr,10); // get numeric value of file_arg number
@@ -299,7 +300,8 @@ static int8_t cmd_set(void){
 	strlwr(arg_ptr[2]);
 
 	// are there possible valid args
-	if((strlen(arg_ptr[1]) > 1) && (strlen(arg_ptr[2]) > 0) && parse_value(arg_ptr[2],&val) > ERROR){
+	if((strlen(arg_ptr[1]) > 1) && (strlen(arg_ptr[2]) > 0)
+			&& parse_value(arg_ptr[2],&val) > ERROR && !(arg_ptr[1][0] == '@')){
 
 		// get port register base address
 		switch(arg_ptr[1][0]){
@@ -338,7 +340,23 @@ static int8_t cmd_set(void){
 				ret = 1;
 			}
 		}
+
 	}
+// this is only needed in scripts
+#if USE_SD== 1
+	// no var or port? then maybe a file_arg is addressed
+	else if(strlen(arg_ptr[1]) > 1 && arg_ptr[1][0] == '@' && strlen(arg_ptr[2]) > 0
+			&& strlen(arg_ptr[2]) <= ARG_TMP_BUF){
+		tmp = strtoul(arg_ptr[1] + 1,&ptr,10); // get numeric value of var number
+		if(*ptr == '\0' && (tmp + 2) < VAR_BUF){ // if var number is a valid value
+			if(!(file_arg_ptr[tmp+2][0] == '\0')){ // only if this file_arg is in use
+				strcpy(file_arg_ptr[tmp+2],arg_ptr[2]);//save value to user var
+				printf("SET | %s = %s",arg_ptr[1],arg_ptr[2]);
+				ret = 1;
+			}
+		}
+	}
+#endif
 
 	if(!(ret > ERROR)) // no port or var is addressed or you screwed up the value...fu** you...ERROR-Time
 		printf(ESC_RED"ERR | %s = %s",arg_ptr[1],arg_ptr[2]);
@@ -364,7 +382,7 @@ static int8_t cmd_print(void){
 	uint16_t tmp;
 
 	//is there a possible valid var or file_arg and base indicator
-	if(((arg_ptr[1][0] == '@') || (arg_ptr[1][0] == '$')) && (strlen(arg_ptr[1])>1)
+	if(((arg_ptr[1][0] == '@') || (arg_ptr[1][0] == '$'))
 			&& (strlen(arg_ptr[2])==1) && (parse_value(arg_ptr[1],&tmp) > ERROR)){
 
 		// lower base indicator for uniformity
@@ -558,11 +576,21 @@ static int8_t cmd_writeF(void){
 	//
 	// returns status of execution
 static int8_t cmd_loop(void){
-	parse_value(arg_ptr[1],&loop_cnt); // get numeric value of arg1
-	if(loop_cnt) //when value is > 0 we have to decrement to execute exact number
-		loop_cnt--;
-	loop_start = file.seek + file.cntOfBytes; // save position in file to restart the loop
-	return 1;
+	if((parse_value(arg_ptr[1],&loop_cnt) > ERROR)){ // get numeric value of arg1
+		// do we have a var?
+		if(((arg_ptr[1][0] == '@') || (arg_ptr[1][0] == '$')) ){
+			strcpy(loop_tmp_arg,arg_ptr[1]); //save for later to check if it changes inside the loop
+			loop_cnt_start = loop_cnt;
+		}
+		else
+			loop_tmp_arg[0] = '\0';
+		if(loop_cnt) //when value is > 0 we have to decrement to execute exact number
+			loop_cnt--;
+		loop_start = file.seek + file.cntOfBytes; // save position in file to restart the loop
+
+		return 1;
+	}
+	return ERROR;
 }
 
 
@@ -573,6 +601,12 @@ static int8_t cmd_loop(void){
 	//
 	// returns status of execution
 static int8_t cmd_endLoop(void){
+	uint16_t tmp;
+	if(!(loop_tmp_arg[0] == '\0')) //did we have a var as loop
+		if( parse_value(loop_tmp_arg,&tmp) > ERROR) //can we get a value of it?
+			if(loop_cnt_start != tmp) // has it changed to old value?
+				(tmp > 0)?(loop_cnt = tmp - 1):(loop_cnt = 0);
+
 	if(loop_cnt-- > 0){ //if there are some executions left
 		ffseek(loop_start); // set back file pointer to first command of loop
 	}

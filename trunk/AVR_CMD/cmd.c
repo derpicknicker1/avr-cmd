@@ -38,8 +38,14 @@
 	// pointer buffer for file argumenst
 	char* file_arg_ptr[ARG_BUF];
 	char loop_tmp_arg[6];
-	uint32_t loop_start = 0;
-	uint16_t loop_cnt = 0, loop_cnt_start = 0;
+
+	uint32_t loop_start = 0; //file pointer to start of loop
+	uint16_t 	loop_cnt = 0, // counter for loops
+				loop_cnt_start = 0, //at very beginning of loop save cnt value
+									//so we can check if it will be changed in loop
+				if_deep = 0, // how deep we are when if is in if is in ....
+				if_disc=0; // counter to discard if blocks
+						   // if parent if block is not executed
 	volatile _Bool in_if = FALSE, if_result = FALSE;
 #endif
 
@@ -130,8 +136,9 @@ void parse_line(char* line){
 
 	// when we are not in if execution state or if it's the right if block
 	if(!in_if || (in_if && if_result) || !(strcmp(arg_ptr[0],"else")) || !(strcmp(arg_ptr[0],"endif")))
-		//Exec command
-		COMMAND_TABLE[i].fp();
+		COMMAND_TABLE[i].fp(); //Exec command
+	else if(!if_result && !(strcmp(arg_ptr[0],"if")) && in_if)
+		if_disc++;
 
 	//free arguments memory and set to '\0'
 	for(i = 0; i < ARG_BUF; i++){
@@ -154,6 +161,8 @@ void parse_line(char* line){
 	// no return
 static void get_arg_from_line(uint8_t position, char* line, char* output){
 	uint8_t spaces = 0, i = 0, strflag = 0;
+
+	while(line[i] == ' ') { i++; }; // discard leading spaces
 
 	while(line[i] != '\0' && position >= spaces){ //while not at and of line and position not found
 
@@ -638,10 +647,26 @@ static int8_t cmd_if(void){
 	//can we get a real value of the two given values
 	if((parse_value(arg_ptr[1],&tmp1) > ERROR) && (parse_value(arg_ptr[3],&tmp2) > ERROR)){
 		switch(arg_ptr[2][0]){
-		case '>': if_result = (tmp1 > tmp2)?TRUE:FALSE; in_if = TRUE; return 1; break;
-		case '<': if_result = (tmp1 < tmp2)?TRUE:FALSE; in_if = TRUE; return 1; break;
-		case '=': if_result = (tmp1 == tmp2)?TRUE:FALSE; in_if = TRUE; return 1; break;
-		case '!': if_result = (tmp1 != tmp2)?TRUE:FALSE; in_if = TRUE; return 1; break;
+		case '>':
+			if_result = (tmp1 > tmp2)?TRUE:FALSE;
+			in_if = TRUE;
+			if_deep++;
+			return 1; break;
+		case '<':
+			if_result = (tmp1 < tmp2)?TRUE:FALSE;
+			in_if = TRUE;
+			if_deep++;
+			return 1; break;
+		case '=':
+			if_result = (tmp1 == tmp2)?TRUE:FALSE;
+			in_if = TRUE;
+			if_deep++;
+			return 1; break;
+		case '!':
+			if_result = (tmp1 != tmp2)?TRUE:FALSE;
+			in_if = TRUE;
+			if_deep++;
+			return 1; break;
 		}
 	}
 	// no valid value...fu** you...ERROR-Time
@@ -658,7 +683,7 @@ static int8_t cmd_if(void){
 	//
 	// returns status of execution
 static int8_t cmd_else(void){
-	if(in_if)
+	if(in_if && if_disc == 0) //are we in if and should we not discard it
 		if_result = (if_result) ? FALSE : TRUE;
 
 	return 1;
@@ -672,8 +697,15 @@ static int8_t cmd_else(void){
 	//
 	// returns status of execution
 static int8_t cmd_endif(void){
-
-	in_if = FALSE;
+	if(if_disc == 0){ //discard ?
+		if(--if_deep == 0) // all if blocks closed
+			in_if = FALSE;
+		else
+			if_result = TRUE; //by setting TRUE, the rest of parent loop
+							  //will be executed
+	}
+	else
+    	if_disc--;
 
 	return 1;
 }

@@ -34,19 +34,24 @@
 	static int8_t cmd_if(void);
 	static int8_t cmd_else(void);
 	static int8_t cmd_endif(void);
+	static int8_t cmd_while(void);
+	static int8_t cmd_endwhile(void);
 
 	// pointer buffer for file argumenst
 	char* file_arg_ptr[ARG_BUF];
 	char loop_tmp_arg[6];
 
-	uint32_t loop_start = 0; //file pointer to start of loop
+	uint32_t loop_start = 0, while_start = 0; //file pointer to start of loop
+
 	uint16_t 	loop_cnt = 0, // counter for loops
 				loop_cnt_start = 0, //at very beginning of loop save cnt value
 									//so we can check if it will be changed in loop
 				if_deep = 0, // how deep we are when if is in if is in ....
 				if_disc=0; // counter to discard if blocks
 						   // if parent if block is not executed
-	volatile _Bool in_if = FALSE, if_result = FALSE;
+
+	volatile _Bool 	in_if = FALSE, if_result = FALSE,
+					while_result = FALSE, in_while = FALSE;
 #endif
 
 // Functions for command line parsing
@@ -60,7 +65,7 @@ static int8_t cmd_print(void);
 static int8_t cmd_math(void);
 
 // array of user accessible variables
-uint16_t public_vars[VAR_BUF] = {0};
+uint16_t public_vars[VAR_BUF] = {0}, line_len = 0;
 // array for pointers to extracted command line arguments
 char* arg_ptr[ARG_BUF] = {0};
 
@@ -96,6 +101,8 @@ COMMAND_STRUCTUR COMMAND_TABLE[] = // Befehls-Tabelle
 		{"if",cmd_if},
 		{"else",cmd_else},
 		{"endif",cmd_endif},
+		{"while",cmd_while},
+		{"endwhile",cmd_endwhile},
 #endif
 	{NULL,NULL} // Marks the end of command table
 };
@@ -112,6 +119,8 @@ void parse_line(char* line){
 	//buffer for extracted commands
 	char gr_buf[ARG_TMP_BUF];
 	uint8_t i = 0;
+
+	line_len = strlen(line);
 
 	//get arguments from command line
 	get_arg_from_line(0,line,gr_buf);
@@ -135,8 +144,11 @@ void parse_line(char* line){
 	}
 
 	// when we are not in if execution state or if it's the right if block
-	if(!in_if || (in_if && if_result) || !(strcmp(arg_ptr[0],"else")) || !(strcmp(arg_ptr[0],"endif")))
-		COMMAND_TABLE[i].fp(); //Exec command
+	if(!in_if || (in_if && if_result) || !(strcmp(arg_ptr[0],"else")) || !(strcmp(arg_ptr[0],"endif"))){
+		//same shit for while
+		if(!in_while || (in_while && while_result) || !(strcmp(arg_ptr[0],"endwhile")))
+			COMMAND_TABLE[i].fp(); //Exec command
+	}
 	//are we in an if block that schould not be executed and an if occurs?
 	//then we have to count this if to discard its else and endif
 	//endif lowers this
@@ -713,6 +725,52 @@ static int8_t cmd_endif(void){
 	}
 	else
     	if_disc--;
+
+	return 1;
+}
+
+
+//----------------------------------------------------------------------------------------------------
+// cmd_while() indicates the else statement of a if block
+	// see also parse_line() to understand
+	//
+	// no input
+	//
+	// returns status of execution
+static int8_t cmd_while(void){
+	// safe if values. we will reuse if for while
+	// and have to restore its values
+	_Bool tmp1 = if_result, tmp2 = in_if;
+	uint16_t tmp3 = if_deep;
+
+	if(cmd_if() > ERROR){
+
+		while_result = if_result; // copy if values
+		in_while = in_if;		  // to corresponding while values
+
+		if(while_result) // if we execute the block, we will come back later
+			// save position in file to restart the loop
+			while_start = file.seek + file.cntOfBytes -line_len - 2;
+	}
+	if_result = tmp1; // restore if values
+	in_if = tmp2;
+	if_deep = tmp3;
+	return 1;
+}
+
+
+//----------------------------------------------------------------------------------------------------
+// cmd_endwhile() indicates the end statement of a while block
+	// see also parse_line() to understand
+	//
+	// no input
+	//
+	// returns status of execution
+static int8_t cmd_endwhile(void){
+		if(while_result) //when this while loop was executed
+			// set back file pointer to while line (beginning of while block)
+			ffseek(while_start);
+		in_while = FALSE;
 
 	return 1;
 }

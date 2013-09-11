@@ -137,6 +137,9 @@ void parse_line(char* line){
 	// when we are not in if execution state or if it's the right if block
 	if(!in_if || (in_if && if_result) || !(strcmp(arg_ptr[0],"else")) || !(strcmp(arg_ptr[0],"endif")))
 		COMMAND_TABLE[i].fp(); //Exec command
+	//are we in an if block that schould not be executed and an if occurs?
+	//then we have to count this if to discard its else and endif
+	//endif lowers this
 	else if(!if_result && !(strcmp(arg_ptr[0],"if")) && in_if)
 		if_disc++;
 
@@ -638,6 +641,7 @@ static int8_t cmd_endLoop(void){
 
 //----------------------------------------------------------------------------------------------------
 // cmd_if() indicates the start of a if and executes the if statement
+	// see also parse_line() to understand
 	//
 	// no input
 	//
@@ -678,12 +682,14 @@ static int8_t cmd_if(void){
 
 //----------------------------------------------------------------------------------------------------
 // cmd_else() indicates the else statement of a if block
+	// see also parse_line() to understand
 	//
 	// no input
 	//
 	// returns status of execution
 static int8_t cmd_else(void){
 	if(in_if && if_disc == 0) //are we in if and should we not discard it
+							  //(see parse_line() for if_disc)
 		if_result = (if_result) ? FALSE : TRUE;
 
 	return 1;
@@ -692,13 +698,14 @@ static int8_t cmd_else(void){
 
 //----------------------------------------------------------------------------------------------------
 // cmd_endif() indicates the end of a if block
+	// see also parse_line() to understand
 	//
 	// no input
 	//
 	// returns status of execution
 static int8_t cmd_endif(void){
-	if(if_disc == 0){ //discard ?
-		if(--if_deep == 0) // all if blocks closed
+	if(if_disc == 0){ //discard (see parse_line())?
+		if(--if_deep == 0) // all if blocks closed?
 			in_if = FALSE;
 		else
 			if_result = TRUE; //by setting TRUE, the rest of parent loop

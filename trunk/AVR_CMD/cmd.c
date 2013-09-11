@@ -384,7 +384,10 @@ static int8_t cmd_set(void){
 		tmp = strtoul(arg_ptr[1] + 1,&ptr,10); // get numeric value of var number
 		if(*ptr == '\0' && (tmp + 2) < VAR_BUF){ // if var number is a valid value
 			if(!(file_arg_ptr[tmp+2][0] == '\0')){ // only if this file_arg is in use
-				strcpy(file_arg_ptr[tmp+2],arg_ptr[2]);//save value to user var
+				//free old memory
+				free(file_arg_ptr[tmp+2]);
+				// allocate memory for new value and save pointer in file arg list
+				file_arg_ptr[tmp+2] = strcpy(malloc((strlen(arg_ptr[2]) + 1) * sizeof(char)),arg_ptr[2]);
 				printf("SET | %s = %s",arg_ptr[1],arg_ptr[2]);
 				ret = 1;
 			}

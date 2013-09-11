@@ -16,6 +16,7 @@
 #if USE_SD == 1
 	#include "sd/mmc_config.h"
 	#include "sd/file.h"
+	#include <stdarg.h>
 
 	// functions for file operation commands
 	static int8_t cmd_execF(void);
@@ -30,12 +31,16 @@
 	static int8_t cmd_delay(void);
 	static int8_t cmd_loop(void);
 	static int8_t cmd_endLoop(void);
+	static int8_t cmd_if(void);
+	static int8_t cmd_else(void);
+	static int8_t cmd_endif(void);
 
 	// pointer buffer for file argumenst
 	char* file_arg_ptr[ARG_BUF];
 	char loop_tmp_arg[6];
 	uint32_t loop_start = 0;
 	uint16_t loop_cnt = 0, loop_cnt_start = 0;
+	volatile _Bool in_if = FALSE, if_result = FALSE;
 #endif
 
 // Functions for command line parsing
@@ -82,6 +87,9 @@ COMMAND_STRUCTUR COMMAND_TABLE[] = // Befehls-Tabelle
 		{"delay",cmd_delay},
 		{"loop",cmd_loop},
 		{"endloop",cmd_endLoop},
+		{"if",cmd_if},
+		{"else",cmd_else},
+		{"endif",cmd_endif},
 #endif
 	{NULL,NULL} // Marks the end of command table
 };
@@ -120,8 +128,10 @@ void parse_line(char* line){
 		}
 	}
 
-	//Exec command
-	COMMAND_TABLE[i].fp();
+	// when we are not in if execution state or if it's the right if block
+	if(!in_if || (in_if && if_result) || !(strcmp(arg_ptr[0],"else")) || !(strcmp(arg_ptr[0],"endif")))
+		//Exec command
+		COMMAND_TABLE[i].fp();
 
 	//free arguments memory and set to '\0'
 	for(i = 0; i < ARG_BUF; i++){
@@ -590,6 +600,9 @@ static int8_t cmd_loop(void){
 
 		return 1;
 	}
+	loop_cnt=0;
+	// no valid value...fu** you...ERROR-Time
+	printf(ESC_RED"ERR |  No valid value for Loop %s"ESC_CLEAR,arg_ptr[1]);
 	return ERROR;
 }
 
@@ -604,12 +617,64 @@ static int8_t cmd_endLoop(void){
 	uint16_t tmp;
 	if(!(loop_tmp_arg[0] == '\0')) //did we have a var as loop
 		if( parse_value(loop_tmp_arg,&tmp) > ERROR) //can we get a value of it?
-			if(loop_cnt_start != tmp) // has it changed to old value?
+			if(loop_cnt_start != tmp) // has it changed?
 				(tmp > 0)?(loop_cnt = tmp - 1):(loop_cnt = 0);
 
 	if(loop_cnt-- > 0){ //if there are some executions left
 		ffseek(loop_start); // set back file pointer to first command of loop
 	}
+	return 1;
+}
+
+
+//----------------------------------------------------------------------------------------------------
+// cmd_if() indicates the start of a if and executes the if statement
+	//
+	// no input
+	//
+	// returns status of execution
+static int8_t cmd_if(void){
+	uint16_t tmp1,tmp2;
+	//can we get a real value of the two given values
+	if((parse_value(arg_ptr[1],&tmp1) > ERROR) && (parse_value(arg_ptr[3],&tmp2) > ERROR)){
+		switch(arg_ptr[2][0]){
+		case '>': if_result = (tmp1 > tmp2)?TRUE:FALSE; in_if = TRUE; return 1; break;
+		case '<': if_result = (tmp1 < tmp2)?TRUE:FALSE; in_if = TRUE; return 1; break;
+		case '=': if_result = (tmp1 == tmp2)?TRUE:FALSE; in_if = TRUE; return 1; break;
+		case '!': if_result = (tmp1 != tmp2)?TRUE:FALSE; in_if = TRUE; return 1; break;
+		}
+	}
+	// no valid value...fu** you...ERROR-Time
+	printf(ESC_RED"ERR |  a non valid value occurs: %s %s %s"ESC_CLEAR,arg_ptr[1],arg_ptr[2],arg_ptr[3]);
+	return ERROR;
+	return 1;
+}
+
+
+//----------------------------------------------------------------------------------------------------
+// cmd_else() indicates the else statement of a if block
+	//
+	// no input
+	//
+	// returns status of execution
+static int8_t cmd_else(void){
+	if(in_if)
+		if_result = (if_result) ? FALSE : TRUE;
+
+	return 1;
+}
+
+
+//----------------------------------------------------------------------------------------------------
+// cmd_endif() indicates the end of a if block
+	//
+	// no input
+	//
+	// returns status of execution
+static int8_t cmd_endif(void){
+
+	in_if = FALSE;
+
 	return 1;
 }
 

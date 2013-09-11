@@ -36,7 +36,7 @@ int main(void){
 	PORTA=PORTB=PORTC=PORTD=0x00;
 
 	//init uart
-	uart_init(BAUD_1M);
+	uart_init(BAUD_500K);
 
 	// some more magic for printf
 	stdout = &mystdout;
